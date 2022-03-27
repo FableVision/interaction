@@ -1,0 +1,148 @@
+lockfileVersion: 5.3
+
+specifiers:
+  '@fablevision/utils': ^1.0.0
+  '@pixi/constants': ^6.3.0
+  '@pixi/core': ^6.0.0
+  '@pixi/display': ^6.0.0
+  '@pixi/math': ^6.0.0
+  '@pixi/runner': ^6.3.0
+  '@pixi/settings': ^6.3.0
+  '@pixi/utils': ^6.3.0
+  '@types/keyboardjs': ^2.5.0
+  keyboardjs: ^2.6.1
+  typescript: ^4.5.0
+
+dependencies:
+  '@fablevision/utils': 1.0.0
+  '@pixi/runner': 6.3.0
+  '@types/keyboardjs': 2.5.0
+  keyboardjs: 2.6.4
+
+devDependencies:
+  '@pixi/constants': 6.3.0
+  '@pixi/core': 6.3.0_870c696c842f9628d3722803d5f1363f
+  '@pixi/display': 6.3.0_847174e7ddcf04d2e651eb5a179aff75
+  '@pixi/math': 6.3.0
+  '@pixi/settings': 6.3.0
+  '@pixi/utils': 6.3.0_144ef662441eafe6efbce13303d1e8b8
+  typescript: 4.6.3
+
+packages:
+
+  /@fablevision/utils/1.0.0:
+    resolution: {integrity: sha512-NQ8u1CCR4zEW3I7237l/HsneCG3x3nlzpRvIo0ShGoS1FKAM/f9wg1JXB9U50hb7i8wEqKvpD0DkyHxu7PKq+g==}
+    dev: false
+
+  /@pixi/constants/6.3.0:
+    resolution: {integrity: sha512-295/bb0+5IugA9plqBnD6xrvApjgGRdaNJ6EryCa7UB2j8wt4YtuzLjNeaCtng9eJONgJXXPhPF85+spdWRMbg==}
+    dev: true
+
+  /@pixi/core/6.3.0_870c696c842f9628d3722803d5f1363f:
+    resolution: {integrity: sha512-j7UMizcgDoUB9eDrZIP22xJCPYpjx2/BCl8deE5M9Cim9OR2qPxnNnt3jC1oKf2vVnNMTDrMOLekhMVo89FX2Q==}
+    peerDependencies:
+      '@pixi/constants': 6.3.0
+      '@pixi/math': 6.3.0
+      '@pixi/runner': 6.3.0
+      '@pixi/settings': 6.3.0
+      '@pixi/ticker': 6.3.0
+      '@pixi/utils': 6.3.0
+    dependencies:
+      '@pixi/constants': 6.3.0
+      '@pixi/math': 6.3.0
+      '@pixi/runner': 6.3.0
+      '@pixi/settings': 6.3.0
+      '@pixi/utils': 6.3.0_144ef662441eafe6efbce13303d1e8b8
+      '@types/offscreencanvas': 2019.6.4
+    dev: true
+
+  /@pixi/display/6.3.0_847174e7ddcf04d2e651eb5a179aff75:
+    resolution: {integrity: sha512-Uxc1aLTFzV55d3kOlh/g19RlE2okPXsroi5jfYGCNS0VCdFk0sp6jMNEwk12BwC0KcA5SU7217H4jLy38VCVpA==}
+    peerDependencies:
+      '@pixi/math': 6.3.0
+      '@pixi/settings': 6.3.0
+      '@pixi/utils': 6.3.0
+    dependencies:
+      '@pixi/math': 6.3.0
+      '@pixi/settings': 6.3.0
+      '@pixi/utils': 6.3.0_144ef662441eafe6efbce13303d1e8b8
+    dev: true
+
+  /@pixi/math/6.3.0:
+    resolution: {integrity: sha512-QkF9wl3/kXvthwWhrDAVgWQWl3T9dbyicHsoWfx0s9b3E0rx+PZcpz5ftaAVxGd7EvecIxV9nEUnna9TIjvwJQ==}
+    dev: true
+
+  /@pixi/runner/6.3.0:
+    resolution: {integrity: sha512-dG0YK/59dMay1pBD3sXYWtyDQ1gjRY8QCI38b+wQiH9oFMNFtj/f/RxkL1XyaK0r7sC8TjXUiQ+7+lZlmcqIjw==}
+    dev: false
+
+  /@pixi/settings/6.3.0:
+    resolution: {integrity: sha512-UkbZmlexr6NGM6Qz30Et63bpWAmpmkknOOnavrhWPnnbhFIx4kVzU9mvGMHGSGNLJabX9+gFUdjDGSlzF42v4w==}
+    dependencies:
+      ismobilejs: 1.1.1
+    dev: true
+
+  /@pixi/utils/6.3.0_144ef662441eafe6efbce13303d1e8b8:
+    resolution: {integrity: sha512-QI5wb/fDdH8DAzIMlrYS0MhG382FPMLh4s3yRtOaftiOb84LL7Syz//SC+CJAyVB0UV/Lpr+T6PiCa4eBjRDgA==}
+    peerDependencies:
+      '@pixi/constants': 6.3.0
+      '@pixi/settings': 6.3.0
+    dependencies:
+      '@pixi/constants': 6.3.0
+      '@pixi/settings': 6.3.0
+      '@types/earcut': 2.1.1
+      earcut: 2.2.3
+      eventemitter3: 3.1.2
+      url: 0.11.0
+    dev: true
+
+  /@types/earcut/2.1.1:
+    resolution: {integrity: sha512-w8oigUCDjElRHRRrMvn/spybSMyX8MTkKA5Dv+tS1IE/TgmNZPqUYtvYBXGY8cieSE66gm+szeK+bnbxC2xHTQ==}
+    dev: true
+
+  /@types/keyboardjs/2.5.0:
+    resolution: {integrity: sha512-tGU6Lz04lDNH+N3AZYIWVeBza2ZSaLlZuSkzi38zSFSuh6DgVqBdqgkX+OS+jg1vwlw5XzS5MASY44fr9C12Yg==}
+    dev: false
+
+  /@types/offscreencanvas/2019.6.4:
+    resolution: {integrity: sha512-u8SAgdZ8ROtkTF+mfZGOscl0or6BSj9A4g37e6nvxDc+YB/oDut0wHkK2PBBiC2bNR8TS0CPV+1gAk4fNisr1Q==}
+    dev: true
+
+  /earcut/2.2.3:
+    resolution: {integrity: sha512-iRDI1QeCQIhMCZk48DRDMVgQSSBDmbzzNhnxIo+pwx3swkfjMh6vh0nWLq1NdvGHLKH6wIrAM3vQWeTj6qeoug==}
+    dev: true
+
+  /eventemitter3/3.1.2:
+    resolution: {integrity: sha512-tvtQIeLVHjDkJYnzf2dgVMxfuSGJeM/7UCG17TT4EumTfNtF+0nebF/4zWOIkCreAbtNqhGEboB6BWrwqNaw4Q==}
+    dev: true
+
+  /ismobilejs/1.1.1:
+    resolution: {integrity: sha512-VaFW53yt8QO61k2WJui0dHf4SlL8lxBofUuUmwBo0ljPk0Drz2TiuDW4jo3wDcv41qy/SxrJ+VAzJ/qYqsmzRw==}
+    dev: true
+
+  /keyboardjs/2.6.4:
+    resolution: {integrity: sha512-xDiNwiwH3KUqap++RFJiLAXzbvRB5Yw08xliuceOgLhM1o7g1puKKR9vWy6wp9H/Bi4VP0+SQMpiWXMWWmR6rA==}
+    dev: false
+
+  /punycode/1.3.2:
+    resolution: {integrity: sha1-llOgNvt8HuQjQvIyXM7v6jkmxI0=}
+    dev: true
+
+  /querystring/0.2.0:
+    resolution: {integrity: sha1-sgmEkgO7Jd+CDadW50cAWHhSFiA=}
+    engines: {node: '>=0.4.x'}
+    deprecated: The querystring API is considered Legacy. new code should use the URLSearchParams API instead.
+    dev: true
+
+  /typescript/4.6.3:
+    resolution: {integrity: sha512-yNIatDa5iaofVozS/uQJEl3JRWLKKGJKh6Yaiv0GLGSuhpFJe7P3SbHZ8/yjAHRQwKRoA6YZqlfjXWmVzoVSMw==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /url/0.11.0:
+    resolution: {integrity: sha1-ODjpfPxgUh63PFJajlW/3Z4uKPE=}
+    dependencies:
+      punycode: 1.3.2
+      querystring: 0.2.0
+    dev: true

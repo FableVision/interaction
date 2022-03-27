@@ -1,0 +1,44 @@
+{
+    "name": "@fablevision/interaction",
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "module": "dist/index.js",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "tsc"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://gitlab.com/fablevision/public-utils/interaction.git"
+    },
+    "author": "",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://gitlab.com/fablevision/public-utils/interaction/issues"
+    },
+    "homepage": "https://gitlab.com/fablevision/public-utils/interaction#readme",
+    "devDependencies": {
+        "@pixi/constants": "^6.3.0",
+        "@pixi/core": "^6.0.0",
+        "@pixi/display": "^6.0.0",
+        "@pixi/math": "^6.0.0",
+        "@pixi/settings": "^6.3.0",
+        "@pixi/utils": "^6.3.0",
+        "typescript": "^4.5.0"
+    },
+    "peerDependencies": {
+        "@pixi/core": "^6.0.0",
+        "@pixi/display": "^6.0.0",
+        "@pixi/math": "^6.0.0"
+    },
+    "dependencies": {
+        "@fablevision/utils": "^1.0.0",
+        "@pixi/runner": "^6.3.0",
+        "@types/keyboardjs": "^2.5.0",
+        "keyboardjs": "^2.6.1"
+    }
+}
