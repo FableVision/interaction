@@ -53,6 +53,12 @@ export interface IPoint
     y: number;
 }
 
+/**
+ * Because we are relying on browser focus events, using a flag that we then consume is the easiest way to
+ * determine if the focus event happened from a mouseover.
+ */
+let NEXT_FOCUS_FROM_MOUSE = false;
+
 export class Interactive implements IDisposable
 {
     public manager: InteractionManager | null = null;
@@ -131,7 +137,11 @@ export class Interactive implements IDisposable
             this.htmlElement.addEventListener('pointercancel', () => this.blur());
             // this.htmlElement.addEventListener('click', (ev) => console.log('Caught mystery click', ev));
         }
-        this.htmlElement.addEventListener('focus', () => this.onFocus.emit(false));
+        this.htmlElement.addEventListener('focus', () => {
+            const fromMouse = NEXT_FOCUS_FROM_MOUSE;
+            NEXT_FOCUS_FROM_MOUSE = false;
+            this.onFocus.emit(fromMouse);
+        });
         this.htmlElement.addEventListener('blur', () => this.onBlur.emit());
         this.htmlElement.style.position = 'absolute';
         if (opts.css)
@@ -211,6 +221,7 @@ export class Interactive implements IDisposable
 
     private onPointerOver(ev: PointerEvent | TouchEvent | MouseEvent)
     {
+        NEXT_FOCUS_FROM_MOUSE = true;
         this.focus();
         if (this.getId(ev) == this.activePointerId)
         {
