@@ -86,8 +86,8 @@ export class Interactive implements IDisposable
     public manager: InteractionManager | null = null;
     /** Event when the item becomes focused. Event data is `true` if done via (real) mouse/touch, false otherwise. */
     public onFocus: Event<boolean>;
-    /** Event when the item loses focus */
-    public onBlur: Event<void>;
+    /** Event when the item loses focus. Event data is `true` if done via (real) mouse/touch, false otherwise. */
+    public onBlur: Event<boolean>;
     /** Event when activated (clicked, hit enter, dwell trigger). Event data is global position (game space) if done via (real) mouse/touch, null otherwise. */
     public onActivate: Event<IPoint | null>;
     public dragStart: Event<IPoint>;
@@ -190,7 +190,7 @@ export class Interactive implements IDisposable
             NEXT_FOCUS_FROM_MOUSE = false;
             this.onFocus.emit(fromMouse);
         });
-        this.htmlElement.addEventListener('blur', () => this.onBlur.emit());
+        this.htmlElement.addEventListener('blur', () => this.onBlur.emit(NEXT_FOCUS_FROM_MOUSE));
         this.htmlElement.style.position = 'absolute';
         if (opts.css)
         {
