@@ -468,9 +468,9 @@ export class InteractionManager
         this.generateContext(internal);
     }
 
-    public enterGroup(item: Interactive, overrideContext?: InteractiveList): void
+    public enterGroup(item: Interactive, overrideContext?: InteractiveList): string
     {
-        if (!overrideContext && (!item.childContext || !item.childContext.length)) return;
+        if (!overrideContext && (!item.childContext || !item.childContext.length)) return '';
         // enter non-baseline context of just the item's children
         const tempName = String(Math.random());
         const items = (overrideContext || item.childContext!).slice();
@@ -507,6 +507,7 @@ export class InteractionManager
         }
         // focus on the first item, to get past the potential group exit at the start
         items[1].focus();
+        return tempName;
     }
 
     /**
