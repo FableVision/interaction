@@ -40,7 +40,7 @@ export enum DragStrategy
     None = 0,
     /** Drag with mouse/touch, no clicking */
     DragOnly,
-    /** Drag with mouse/touch, clicking starts a drag to be stopped with another click. Not yet implemented */
+    /** Drag with mouse/touch, clicking starts a drag to be stopped with another click. */
     DragWithStickyClick,
     /** Drag with mouse/touch, but clicking activates the element instead */
     DragOrClick,
@@ -80,6 +80,7 @@ export interface IPoint
  * determine if the focus event happened from a mouseover.
  */
 let NEXT_FOCUS_FROM_MOUSE = false;
+let NEXT_BLUR_FROM_MOUSE = false;
 
 export class Interactive implements IDisposable
 {
@@ -190,7 +191,13 @@ export class Interactive implements IDisposable
             NEXT_FOCUS_FROM_MOUSE = false;
             this.onFocus.emit(fromMouse);
         });
-        this.htmlElement.addEventListener('blur', () => this.onBlur.emit(NEXT_FOCUS_FROM_MOUSE));
+        this.htmlElement.addEventListener('blur', () => {
+            // in the off chance that we have a focus() caused by a mouseover before a mouseout is handled,
+            // check for both blur and focus flags
+            const fromMouse = NEXT_BLUR_FROM_MOUSE || NEXT_FOCUS_FROM_MOUSE;
+            NEXT_BLUR_FROM_MOUSE = false;
+            this.onBlur.emit(fromMouse);
+        });
         this.htmlElement.style.position = 'absolute';
         if (opts.css)
         {
@@ -282,6 +289,7 @@ export class Interactive implements IDisposable
 
     private onPointerOut(ev: PointerEvent | TouchEvent | MouseEvent)
     {
+        NEXT_BLUR_FROM_MOUSE = true;
         this.blur();
         if (this.getId(ev) == this.activePointerId)
         {
