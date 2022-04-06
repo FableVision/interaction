@@ -168,7 +168,7 @@ export class InteractionManager
         const keyboard = Keyboard.instance;
         keyboard.addGlobal(
             {keys: [keyboard.ESC], down: this.handleEsc.bind(this)},
-            {keys: ['enter', 'space'], down: this.activate.bind(this)},
+            {keys: ['enter', 'space'], down: this.activateKeyDown, up: this.activateKeyUp},
         );
         if (this.controls != ControlStrategy.BrowserNative)
         {
@@ -232,6 +232,38 @@ export class InteractionManager
         if (this.current)
         {
             this.current.onActivate.emit(null);
+
+            // since we are interacting with the game, lock the player back in
+            if (this.controls == ControlStrategy.LockedIn && !this.isLockedIn)
+            {
+                this.attachControls();
+            }
+        }
+    };
+
+    private activateKeyDown = () =>
+    {
+        if (!this.enabled) return;
+
+        if (this.current)
+        {
+            this.current.keyStart.emit();
+
+            // since we are interacting with the game, lock the player back in
+            if (this.controls == ControlStrategy.LockedIn && !this.isLockedIn)
+            {
+                this.attachControls();
+            }
+        }
+    };
+
+    private activateKeyUp = () =>
+    {
+        if (!this.enabled) return;
+
+        if (this.current)
+        {
+            this.current.keyStop.emit();
 
             // since we are interacting with the game, lock the player back in
             if (this.controls == ControlStrategy.LockedIn && !this.isLockedIn)
@@ -436,12 +468,12 @@ export class InteractionManager
         this.generateContext(internal);
     }
 
-    public enterGroup(item: Interactive): void
+    public enterGroup(item: Interactive, overrideContext?: InteractiveList): void
     {
-        if (!item.childContext || !item.childContext.length) return;
+        if (!overrideContext && (!item.childContext || !item.childContext.length)) return;
         // enter non-baseline context of just the item's children
         const tempName = String(Math.random());
-        const items = item.childContext.slice();
+        const items = (overrideContext || item.childContext!).slice();
         let groupExit: Interactive[]|null = null;
         if (this.groupEnd == GroupEndStrategy.Exit)
         {
@@ -473,6 +505,8 @@ export class InteractionManager
         {
             newContext.cleanup.add(...groupExit);
         }
+        // focus on the first item, to get past the potential group exit at the start
+        items[1].focus();
     }
 
     /**
@@ -630,20 +664,27 @@ export class InteractionManager
                 }
             }
         }
+        this.recursiveAddParents(current, list);
+    }
+
+    private recursiveAddParents(current: InternalContext, existingList: InteractiveList)
+    {
         // if this is part of a parent context, then keep the parent context enabled but with
         // no keyboard access
         if (current.parent)
         {
             for (const item of current.parent.items)
             {
-                if (list.includes(item) || item.isGroup || item.keyboardOnly) continue;
+                if (existingList.includes(item) || item.isGroup || item.keyboardOnly) continue;
 
                 this.htmlContainer.appendChild(item.htmlElement);
                 // set tab index to -1 to allow use by focus() but not tab
                 item.htmlElement.tabIndex = -1;
                 this.currentDisposable.add(item.onFocus.add(() => this.onFocused(item)));
                 this.currentDisposable.add(item.onBlur.add(() => this.onBlurred(item)));
+
             }
+            this.recursiveAddParents(current.parent, existingList);
         }
     }
 

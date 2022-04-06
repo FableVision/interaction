@@ -34,6 +34,26 @@ else if (SUPPORTS_TOUCH)
     // EVENTS.out = 'touchout';
 }
 
+export enum DragStrategy
+{
+    /** No dragging */
+    None = 0,
+    /** Drag with mouse/touch, no clicking */
+    DragOnly,
+    /** Drag with mouse/touch, clicking starts a drag to be stopped with another click. Not yet implemented */
+    DragWithStickyClick,
+    /** Drag with mouse/touch, but clicking activates the element instead */
+    DragOrClick,
+}
+
+export enum KeyboardActivateStrategy
+{
+    /** Keyboard keys activate the item on release */
+    Normal,
+    /** Keyboard keys trigger down/up events on the item */
+    Hold,
+}
+
 export interface InteractiveOpts
 {
     alwaysDwell?: boolean;
@@ -42,9 +62,11 @@ export interface InteractiveOpts
     role?: string;
     label?: string;
     css?: Partial<CSSStyleDeclaration>;
-    draggable?: boolean;
+    draggable?: boolean|DragStrategy;
+    minDragDist?: number;
     pointerOnly?: boolean;
     keyboardOnly?: boolean;
+    keyControl?: KeyboardActivateStrategy;
 }
 
 export interface IPoint
@@ -71,6 +93,8 @@ export class Interactive implements IDisposable
     public dragStart: Event<IPoint>;
     public dragMove: Event<IPoint>;
     public dragStop: Event<IPoint>;
+    public keyStart: Event<void>;
+    public keyStop: Event<void>;
     /** Always enable dwell activation on this item. */
     public alwaysDwell: boolean;
     /** Should not be accessible via keyboard ever. */
@@ -88,7 +112,14 @@ export class Interactive implements IDisposable
     /** If the active (held) pointer is in the element */
     protected pointerIn: boolean = false;
     /** Is draggable (don't emit activate on clicks) */
-    protected draggable: boolean;
+    protected draggable: DragStrategy;
+    /** Minimum distance mouse must move to not be considered a click */
+    protected minDragDistSq: number;
+    /** Position for tracking distance */
+    protected dragStartPoint: IPoint;
+    /** If we are currently being dragged (if not, we are calculating a drag start) */
+    protected isDragging: boolean;
+    protected keyStrat: KeyboardActivateStrategy;
 
     constructor(opts: InteractiveOpts)
     {
@@ -98,10 +129,27 @@ export class Interactive implements IDisposable
         this.dragStart = new Event();
         this.dragMove = new Event();
         this.dragStop = new Event();
+        this.keyStart = new Event();
+        this.keyStop = new Event();
         this.alwaysDwell = !!opts.alwaysDwell;
-        this.draggable = !!opts.draggable;
+        if (!opts.draggable || typeof opts.draggable == 'boolean')
+        {
+            this.draggable = opts.draggable ? DragStrategy.DragOnly : DragStrategy.None;
+        }
+        else
+        {
+            this.draggable = opts.draggable;
+        }
+        this.minDragDistSq = Math.pow(opts.minDragDist || 20, 2);
+        this.dragStartPoint = {x: 0, y: 0};
+        this.isDragging = false;
         this.pointerOnly = !!opts.pointerOnly;
         this.keyboardOnly = !!opts.keyboardOnly;
+        this.keyStrat = opts.keyControl || KeyboardActivateStrategy.Normal;
+        if (this.keyStrat == KeyboardActivateStrategy.Normal)
+        {
+            this.keyStop.on(() => this.onActivate.emit(null));
+        }
         this.htmlElement = document.createElement('div');
         this.htmlElement.classList.add('interactive');
         this.childContext = opts.childContext ? opts.childContext : null;
@@ -189,6 +237,8 @@ export class Interactive implements IDisposable
         this.dragStart.dispose();
         this.dragMove.dispose();
         this.dragStop.dispose();
+        this.keyStart.dispose();
+        this.keyStop.dispose();
         this.removeWindowListeners();
         // ensure that the div doesn't stick around
         this.htmlElement.remove();
@@ -214,6 +264,7 @@ export class Interactive implements IDisposable
     {
         recipient.activePointerId = this.activePointerId;
         recipient.pointerIn = true;
+        recipient.isDragging = true;
         recipient.addWindowEvents();
 
         this.cancelDrag();
@@ -251,7 +302,26 @@ export class Interactive implements IDisposable
         if (this.draggable)
         {
             ev.preventDefault();
-            this.dragStart.emit(this.mapEvToPoint(ev));
+            // if we are already dragging due to sticky click, we don't need to emit anything else
+            if (this.isDragging) return;
+
+            const point = this.mapEvToPoint(ev);
+            // if we are only draggable, or sticky click + a touch event, start dragging immediately
+            if (this.draggable == DragStrategy.DragOnly ||
+                (this.draggable == DragStrategy.DragWithStickyClick &&
+                    (SUPPORTS_TOUCH && ev instanceof TouchEvent) ||
+                    (SUPPORTS_POINTERS && (ev as PointerEvent).pointerType == 'touch')
+                )
+            )
+            {
+                this.isDragging = true;
+                this.dragStart.emit(point);
+            }
+            else
+            {
+                this.dragStartPoint.x = point.x;
+                this.dragStartPoint.y = point.y;
+            }
         }
     }
 
@@ -272,7 +342,21 @@ export class Interactive implements IDisposable
         if (this.draggable)
         {
             ev.preventDefault();
-            this.dragMove.emit(this.mapEvToPoint(ev));
+
+            const point = this.mapEvToPoint(ev);
+            if (!this.isDragging &&
+                (this.draggable == DragStrategy.DragOrClick || this.draggable == DragStrategy.DragWithStickyClick))
+            {
+                if (distSq(point, this.dragStartPoint) >= this.minDragDistSq)
+                {
+                    this.isDragging = true;
+                    this.dragStart.emit(this.dragStartPoint);
+                }
+            }
+            if (this.isDragging)
+            {
+                this.dragMove.emit(point);
+            }
         }
     }
 
@@ -283,13 +367,23 @@ export class Interactive implements IDisposable
 
         ev.preventDefault();
 
-        if (this.draggable)
+        const point = this.mapEvToPoint(ev);
+        if (this.isDragging)
         {
-            this.dragStop.emit(this.mapEvToPoint(ev));
+            this.isDragging = false;
+            this.dragStop.emit(point);
         }
         else if (this.pointerIn)
         {
-            this.onActivate.emit(this.mapEvToPoint(ev));
+            if (this.draggable == DragStrategy.DragWithStickyClick)
+            {
+                this.isDragging = true;
+                this.dragStart.emit(point);
+            }
+            else if (this.draggable != DragStrategy.DragOnly)
+            {
+                this.onActivate.emit(this.mapEvToPoint(ev));
+            }
         }
 
         this.activePointerId = -1;
@@ -303,6 +397,7 @@ export class Interactive implements IDisposable
         if (this.draggable)
         {
             this.dragStop.emit(this.mapEvToPoint(ev));
+            this.isDragging = false;
         }
 
         this.activePointerId = -1;
@@ -368,4 +463,9 @@ export class Interactive implements IDisposable
 
         return this.manager!.renderer.mapClientPosToPoint(x, y);
     }
+}
+
+function distSq(p1: IPoint, p2: IPoint)
+{
+    return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y)
 }
