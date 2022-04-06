@@ -637,6 +637,7 @@ export class InteractionManager
 
         this.currentContext = {items: list, parent: current.parent?.items||null};
         this.renderer.forceTransformUpdate();
+        const added = list.slice();
         for (let i = 0; i < list.length; ++i)
         {
             const item = list[i];
@@ -650,22 +651,33 @@ export class InteractionManager
             if (item.childContext)
             {
                 this.currentDisposable.add(item.onActivate.add(() => this.enterGroup(item)));
-                // children need to be added for clicks, but shouldn't be accessible via keyboard
-                // in order to simplify keyboard order
-                for (const child of item.childContext)
-                {
-                    if (list.includes(child) || child.isGroup || child.keyboardOnly) continue;
-
-                    child.manager = this;
-                    this.htmlContainer.appendChild(child.htmlElement);
-                    // set tab index to -1 to allow use by focus() but not tab
-                    child.htmlElement.tabIndex = -1;
-                    this.currentDisposable.add(child.onFocus.add(() => this.onFocused(child)));
-                    this.currentDisposable.add(child.onBlur.add(() => this.onBlurred(child)));
-                }
+                this.recursiveAddChildren(item, added);
             }
         }
-        this.recursiveAddParents(current, list);
+        this.recursiveAddParents(current, added);
+    }
+
+    private recursiveAddChildren(item: Interactive, existingList: InteractiveList)
+    {
+        if (!item.childContext) return;
+        // children need to be added for clicks, but shouldn't be accessible via keyboard
+        // in order to simplify keyboard order
+        for (const child of item.childContext)
+        {
+            if (child.isGroup)
+            {
+                this.recursiveAddChildren(child, existingList);
+            }
+            if (existingList.includes(child) || child.isGroup || child.keyboardOnly) continue;
+
+            existingList.push(child);
+            child.manager = this;
+            this.htmlContainer.appendChild(child.htmlElement);
+            // set tab index to -1 to allow use by focus() but not tab
+            child.htmlElement.tabIndex = -1;
+            this.currentDisposable.add(child.onFocus.add(() => this.onFocused(child)));
+            this.currentDisposable.add(child.onBlur.add(() => this.onBlurred(child)));
+        }
     }
 
     private recursiveAddParents(current: InternalContext, existingList: InteractiveList)
@@ -676,8 +688,13 @@ export class InteractionManager
         {
             for (const item of current.parent.items)
             {
+                if (item.childContext)
+                {
+                    this.recursiveAddChildren(item, existingList);
+                }
                 if (existingList.includes(item) || item.isGroup || item.keyboardOnly) continue;
 
+                existingList.push(item);
                 this.htmlContainer.appendChild(item.htmlElement);
                 // set tab index to -1 to allow use by focus() but not tab
                 item.htmlElement.tabIndex = -1;
