@@ -277,7 +277,7 @@ export class Interactive implements IDisposable
         this.cancelDrag();
     }
 
-    private onPointerOver(ev: PointerEvent | TouchEvent | MouseEvent)
+    private onPointerOver(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         NEXT_FOCUS_FROM_MOUSE = true;
         this.focus();
@@ -287,7 +287,7 @@ export class Interactive implements IDisposable
         }
     }
 
-    private onPointerOut(ev: PointerEvent | TouchEvent | MouseEvent)
+    private onPointerOut(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         NEXT_BLUR_FROM_MOUSE = true;
         this.blur();
@@ -297,7 +297,7 @@ export class Interactive implements IDisposable
         }
     }
 
-    private onPointerDown(ev: PointerEvent | TouchEvent | MouseEvent)
+    private onPointerDown(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         // console.log('pointer down', ev);
         if (this.activePointerId >= 0) return;
@@ -316,10 +316,7 @@ export class Interactive implements IDisposable
             const point = this.mapEvToPoint(ev);
             // if we are only draggable, or sticky click + a touch event, start dragging immediately
             if (this.draggable == DragStrategy.DragOnly ||
-                (this.draggable == DragStrategy.DragWithStickyClick &&
-                    (SUPPORTS_TOUCH && ev instanceof TouchEvent) ||
-                    (SUPPORTS_POINTERS && (ev as PointerEvent).pointerType == 'touch')
-                )
+                (this.draggable == DragStrategy.DragWithStickyClick && isTouch(ev))
             )
             {
                 this.isDragging = true;
@@ -343,7 +340,7 @@ export class Interactive implements IDisposable
         }
     }
 
-    private onPointerMove(ev: PointerEvent | TouchEvent | MouseEvent)
+    private onPointerMove(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         if (this.activePointerId != this.getId(ev)) return;
 
@@ -368,22 +365,23 @@ export class Interactive implements IDisposable
         }
     }
 
-    private onPointerUp(ev: PointerEvent | TouchEvent | MouseEvent)
+    private onPointerUp(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         // console.log('pointer up', ev);
         if (this.activePointerId != this.getId(ev)) return;
 
         ev.preventDefault();
 
+        const touch = isTouch(ev);
         const point = this.mapEvToPoint(ev);
         if (this.isDragging)
         {
             this.isDragging = false;
             this.dragStop.emit(point);
         }
-        else if (this.pointerIn)
+        else if (this.pointerIn || touch)
         {
-            if (this.draggable == DragStrategy.DragWithStickyClick)
+            if (this.draggable == DragStrategy.DragWithStickyClick && !touch)
             {
                 this.isDragging = true;
                 this.dragStart.emit(point);
@@ -398,7 +396,7 @@ export class Interactive implements IDisposable
         this.removeWindowListeners();
     }
 
-    private onPointerCancel(ev: PointerEvent | TouchEvent | MouseEvent)
+    private onPointerCancel(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         if (this.activePointerId != this.getId(ev)) return;
 
@@ -412,7 +410,7 @@ export class Interactive implements IDisposable
         this.removeWindowListeners();
     }
 
-    private getId(ev: PointerEvent | TouchEvent | MouseEvent): number
+    private getId(ev: PointerEvent|TouchEvent|MouseEvent): number
     {
         if (SUPPORTS_POINTERS && ev instanceof PointerEvent && ev.pointerId == this.activePointerId)
         {
@@ -446,7 +444,7 @@ export class Interactive implements IDisposable
         window.removeEventListener(EVENTS.cancel as any, this.onPointerCancel);
     }
 
-    private mapEvToPoint(ev: PointerEvent | TouchEvent | MouseEvent)
+    private mapEvToPoint(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         let x!: number;
         let y!: number;
@@ -476,4 +474,10 @@ export class Interactive implements IDisposable
 function distSq(p1: IPoint, p2: IPoint)
 {
     return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y)
+}
+
+function isTouch(ev: PointerEvent|TouchEvent|MouseEvent)
+{
+    return (SUPPORTS_TOUCH && ev instanceof TouchEvent) ||
+        (SUPPORTS_POINTERS && (ev as PointerEvent).pointerType == 'touch');
 }
