@@ -113,6 +113,8 @@ export interface InteractionManagerOpts
     groupEnd?: GroupEndStrategy;
     /** How to handle tab controls. Defaults to browser native controls. */
     control?: ControlStrategy;
+    /** If focus & blur should still function when the InteractionManager is disabled. */
+    focusWhenDisabled?: boolean;
 }
 
 export class InteractionManager
@@ -127,6 +129,7 @@ export class InteractionManager
     public enabled = false;
     public useDwell: boolean = false;
     public renderer: IRendererPlugin;
+    private focusWhenDisabled: boolean;
     /** Baseline context that is added to all contexts, unless told not to */
     private baselineContext: BaselineContext;
     /** Stack of explicit contexts */
@@ -150,6 +153,7 @@ export class InteractionManager
         this.groupEnd = opts.groupEnd || GroupEndStrategy.Exit;
         this.controls = opts.control || ControlStrategy.BrowserNative;
         this.controlsListener = null;
+        this.focusWhenDisabled = !!opts.focusWhenDisabled;
 
         this.renderer = opts.renderer;
         if (typeof opts.accessibilityDiv == 'string')
@@ -297,9 +301,20 @@ export class InteractionManager
         }
     }
 
+    /** For internal use - should focus be handled. Value is computed with the enabled and focusWhenDisabled properties. */
+    public get focusEnabled(): boolean
+    {
+        return this.enabled || this.focusWhenDisabled;
+    }
+
     private onFocused(target: Interactive)
     {
+        if (!this.focusEnabled) return;
+
         this.current = target;
+
+        if (!this.enabled) return;
+
         if (target.alwaysDwell || this.useDwell)
         {
             this.dwellTimeout = setTimeout(this.activate, CSS_CONFIG.dwellSeconds * 1000) as any;
@@ -342,7 +357,7 @@ export class InteractionManager
 
     private next(e: KeyEvent)
     {
-        if (!this.enabled) return;
+        if (!this.focusEnabled) return;
         e.preventDefault();
 
         const context = this.currentContext?.items;
@@ -375,7 +390,7 @@ export class InteractionManager
 
     private prev(e: KeyEvent)
     {
-        if (!this.enabled) return;
+        if (!this.focusEnabled) return;
         e.preventDefault();
 
         const context = this.currentContext?.items;

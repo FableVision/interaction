@@ -149,7 +149,12 @@ export class Interactive implements IDisposable
         this.keyStrat = opts.keyControl || KeyboardActivateStrategy.Normal;
         if (this.keyStrat == KeyboardActivateStrategy.Normal)
         {
-            this.keyStop.on(() => this.onActivate.emit(null));
+            this.keyStop.on(() => {
+                if (this.manager!.enabled)
+                {
+                    this.onActivate.emit(null);
+                }
+            });
         }
         this.htmlElement = document.createElement('div');
         this.htmlElement.classList.add('interactive');
@@ -279,6 +284,8 @@ export class Interactive implements IDisposable
 
     private onPointerOver(ev: PointerEvent|TouchEvent|MouseEvent)
     {
+        if (!this.manager!.focusEnabled) return;
+
         NEXT_FOCUS_FROM_MOUSE = true;
         this.focus();
         if (this.getId(ev) == this.activePointerId)
@@ -289,6 +296,8 @@ export class Interactive implements IDisposable
 
     private onPointerOut(ev: PointerEvent|TouchEvent|MouseEvent)
     {
+        if (!this.manager!.focusEnabled) return;
+
         NEXT_BLUR_FROM_MOUSE = true;
         this.blur();
         if (this.getId(ev) == this.activePointerId)
@@ -299,6 +308,7 @@ export class Interactive implements IDisposable
 
     private onPointerDown(ev: PointerEvent|TouchEvent|MouseEvent)
     {
+        if (!this.manager!.enabled) return;
         // console.log('pointer down', ev);
         if (this.activePointerId >= 0) return;
 
@@ -342,6 +352,7 @@ export class Interactive implements IDisposable
 
     private onPointerMove(ev: PointerEvent|TouchEvent|MouseEvent)
     {
+        if (!this.manager!.enabled) return;
         if (this.activePointerId != this.getId(ev)) return;
 
         if (this.draggable)
@@ -377,18 +388,24 @@ export class Interactive implements IDisposable
         if (this.isDragging)
         {
             this.isDragging = false;
-            this.dragStop.emit(point);
+            if (this.manager!.enabled)
+            {
+                this.dragStop.emit(point);
+            }
         }
         else if (this.pointerIn || touch)
         {
-            if (this.draggable == DragStrategy.DragWithStickyClick && !touch)
+            if (this.manager!.enabled)
             {
-                this.isDragging = true;
-                this.dragStart.emit(point);
-            }
-            else if (this.draggable != DragStrategy.DragOnly)
-            {
-                this.onActivate.emit(this.mapEvToPoint(ev));
+                if (this.draggable == DragStrategy.DragWithStickyClick && !touch)
+                {
+                    this.isDragging = true;
+                    this.dragStart.emit(point);
+                }
+                else if (this.draggable != DragStrategy.DragOnly)
+                {
+                    this.onActivate.emit(this.mapEvToPoint(ev));
+                }
             }
         }
 
@@ -402,8 +419,11 @@ export class Interactive implements IDisposable
 
         if (this.draggable)
         {
-            this.dragStop.emit(this.mapEvToPoint(ev));
             this.isDragging = false;
+            if (this.manager!.enabled)
+            {
+                this.dragStop.emit(this.mapEvToPoint(ev));
+            }
         }
 
         this.activePointerId = -1;
