@@ -42,7 +42,7 @@ export enum DragStrategy
     DragOnly,
     /** Drag with mouse/touch, clicking starts a drag to be stopped with another click. */
     DragWithStickyClick,
-    /** Drag with mouse, but clicking activates the element instead */
+    /** Drag with mouse/touch, but clicking/tapping activates the element instead */
     DragOrClick,
     /** Drag with touch, but clicking activates the element instead*/
     DragWithStickyClickTap
