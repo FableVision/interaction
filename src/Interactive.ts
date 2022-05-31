@@ -152,7 +152,7 @@ export class Interactive implements IDisposable
         }
         this.minDragDistSq = Math.pow(opts.minDragDist || 20, 2);
         this.dragStartPoint = {x: 0, y: 0};
-        this.currentDragType = 0;
+        this.currentDragType = DragType.None;
         this.pointerOnly = !!opts.pointerOnly;
         this.keyboardOnly = !!opts.keyboardOnly;
         this.keyStrat = opts.keyControl || KeyboardActivateStrategy.Normal;
