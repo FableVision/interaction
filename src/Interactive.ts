@@ -384,18 +384,7 @@ export class Interactive implements IDisposable
             {
                 if (distSq(point, this.dragStartPoint) >= this.minDragDistSq)
                 {
-                    if(this.draggable == DragStrategy.DragOrClick)
-                    {
-                        this.currentDragType = DragType.Held;
-                    }
-                    else if (this.draggable == DragStrategy.DragWithStickyClick) 
-                    {
-                        this.currentDragType = DragType.StickyClick;
-                    }
-                    else if (this.draggable == DragStrategy.DragWithStickyClickTap)
-                    {
-                        this.currentDragType = DragType.StickyTap;
-                    }
+                    this.currentDragType = DragType.Held;
                     this.dragStart.emit(this.dragStartPoint);
                 }
             }
