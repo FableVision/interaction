@@ -388,7 +388,7 @@ export class Interactive implements IDisposable
                     this.dragStart.emit(this.dragStartPoint);
                 }
             }
-            if (this.currentDragType == DragType.None)
+            if (this.currentDragType != DragType.None)
             {
                 this.dragMove.emit(point);
             }
