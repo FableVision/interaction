@@ -42,8 +42,10 @@ export enum DragStrategy
     DragOnly,
     /** Drag with mouse/touch, clicking starts a drag to be stopped with another click. */
     DragWithStickyClick,
-    /** Drag with mouse/touch, but clicking activates the element instead */
+    /** Drag with mouse, but clicking activates the element instead */
     DragOrClick,
+    /** Drag with touch, but clicking activates the element instead*/
+    DragWithStickyClickTap
 }
 
 export enum KeyboardActivateStrategy
@@ -52,6 +54,13 @@ export enum KeyboardActivateStrategy
     Normal,
     /** Keyboard keys trigger down/up events on the item */
     Hold,
+}
+
+export enum DragType {
+    None = 0,
+    Held,
+    StickyClick,
+    StickyTap
 }
 
 export interface InteractiveOpts
@@ -119,7 +128,7 @@ export class Interactive implements IDisposable
     /** Position for tracking distance */
     protected dragStartPoint: IPoint;
     /** If we are currently being dragged (if not, we are calculating a drag start) */
-    protected isDragging: boolean;
+    protected currentDragType: DragType;
     protected keyStrat: KeyboardActivateStrategy;
 
     constructor(opts: InteractiveOpts)
@@ -143,7 +152,7 @@ export class Interactive implements IDisposable
         }
         this.minDragDistSq = Math.pow(opts.minDragDist || 20, 2);
         this.dragStartPoint = {x: 0, y: 0};
-        this.isDragging = false;
+        this.currentDragType = 0;
         this.pointerOnly = !!opts.pointerOnly;
         this.keyboardOnly = !!opts.keyboardOnly;
         this.keyStrat = opts.keyControl || KeyboardActivateStrategy.Normal;
@@ -276,7 +285,7 @@ export class Interactive implements IDisposable
     {
         recipient.activePointerId = this.activePointerId;
         recipient.pointerIn = true;
-        recipient.isDragging = true;
+        recipient.currentDragType = DragType.Held;
         recipient.addWindowEvents();
 
         this.cancelDrag();
@@ -321,17 +330,25 @@ export class Interactive implements IDisposable
         {
             ev.preventDefault();
             // if we are already dragging due to sticky click, we don't need to emit anything else
-            if (this.isDragging) return;
+            if (this.currentDragType != DragType.None) return;
 
             const point = this.mapEvToPoint(ev);
-            // if we are only draggable, or sticky click + a touch event, start dragging immediately
-            if (this.draggable == DragStrategy.DragOnly ||
-                (this.draggable == DragStrategy.DragWithStickyClick && isTouch(ev))
-            )
+
+            if (this.draggable == DragStrategy.DragOnly) 
             {
-                this.isDragging = true;
-                this.dragStart.emit(point);
+                this.currentDragType = DragType.Held;
             }
+            else if (this.draggable == DragStrategy.DragWithStickyClick || this.draggable == DragStrategy.DragWithStickyClickTap)
+            {
+                if(isTouch(ev))
+                {
+                    this.currentDragType = DragType.StickyTap;
+                }
+                else {
+                    this.currentDragType = DragType.StickyClick;
+                }
+                this.dragStart.emit(point);
+            }            
             else
             {
                 this.dragStartPoint.x = point.x;
@@ -353,23 +370,36 @@ export class Interactive implements IDisposable
     private onPointerMove(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         if (!this.manager!.enabled) return;
-        if (this.activePointerId != this.getId(ev)) return;
+        if ((this.activePointerId != this.getId(ev)) && this.currentDragType != DragType.StickyTap) {
+            return;
+        }
 
         if (this.draggable)
         {
             ev.preventDefault();
 
             const point = this.mapEvToPoint(ev);
-            if (!this.isDragging &&
-                (this.draggable == DragStrategy.DragOrClick || this.draggable == DragStrategy.DragWithStickyClick))
+            if (this.currentDragType == DragType.None &&
+                (this.draggable == DragStrategy.DragOrClick || this.draggable == DragStrategy.DragWithStickyClick || this.draggable == DragStrategy.DragWithStickyClickTap))
             {
                 if (distSq(point, this.dragStartPoint) >= this.minDragDistSq)
                 {
-                    this.isDragging = true;
+                    if(this.draggable == DragStrategy.DragOrClick)
+                    {
+                        this.currentDragType = DragType.Held;
+                    }
+                    else if (this.draggable == DragStrategy.DragWithStickyClick) 
+                    {
+                        this.currentDragType = DragType.StickyClick;
+                    }
+                    else if (this.draggable == DragStrategy.DragWithStickyClickTap)
+                    {
+                        this.currentDragType = DragType.StickyTap;
+                    }
                     this.dragStart.emit(this.dragStartPoint);
                 }
             }
-            if (this.isDragging)
+            if (this.currentDragType == DragType.None)
             {
                 this.dragMove.emit(point);
             }
@@ -379,15 +409,16 @@ export class Interactive implements IDisposable
     private onPointerUp(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         // console.log('pointer up', ev);
-        if (this.activePointerId != this.getId(ev)) return;
+        if ((this.activePointerId != this.getId(ev)) && (this.currentDragType != DragType.StickyTap)) return;
 
         ev.preventDefault();
 
         const touch = isTouch(ev);
         const point = this.mapEvToPoint(ev);
-        if (this.isDragging)
+        let shouldCleanUp = true;
+        if (this.currentDragType == DragType.None)
         {
-            this.isDragging = false;
+            this.currentDragType = DragType.None;
             if (this.manager!.enabled)
             {
                 this.dragStop.emit(point);
@@ -399,8 +430,9 @@ export class Interactive implements IDisposable
             {
                 if (this.draggable == DragStrategy.DragWithStickyClick && !touch)
                 {
-                    this.isDragging = true;
+                    this.currentDragType = DragType.StickyClick;
                     this.dragStart.emit(point);
+                    shouldCleanUp = false;
                 }
                 else if (this.draggable != DragStrategy.DragOnly)
                 {
@@ -410,7 +442,9 @@ export class Interactive implements IDisposable
         }
 
         this.activePointerId = -1;
-        this.removeWindowListeners();
+        if(shouldCleanUp){
+            this.removeWindowListeners();
+        }
     }
 
     private onPointerCancel(ev: PointerEvent|TouchEvent|MouseEvent)
@@ -419,7 +453,7 @@ export class Interactive implements IDisposable
 
         if (this.draggable)
         {
-            this.isDragging = false;
+            this.currentDragType = DragType.None;
             if (this.manager!.enabled)
             {
                 this.dragStop.emit(this.mapEvToPoint(ev));
