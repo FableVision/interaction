@@ -405,7 +405,7 @@ export class Interactive implements IDisposable
         const touch = isTouch(ev);
         const point = this.mapEvToPoint(ev);
         let shouldCleanUp = true;
-        if (this.currentDragType == DragType.None)
+        if (this.currentDragType != DragType.None)
         {
             this.currentDragType = DragType.None;
             if (this.manager!.enabled)
