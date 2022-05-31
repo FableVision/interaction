@@ -42,9 +42,9 @@ export enum DragStrategy
     DragOnly,
     /** Drag with mouse/touch, clicking starts a drag to be stopped with another click. */
     DragWithStickyClick,
-    /** Drag with mouse, but clicking activates the element instead */
+    /** Drag with mouse/touch, but clicking/tapping activates the element instead */
     DragOrClick,
-    /** Drag with touch, but clicking activates the element instead*/
+    /** Drag with mouse/touch, but clicking/tapping starts a "sticky" drag, where another click/tap ends the drag. */
     DragWithStickyClickTap
 }
 
@@ -152,7 +152,7 @@ export class Interactive implements IDisposable
         }
         this.minDragDistSq = Math.pow(opts.minDragDist || 20, 2);
         this.dragStartPoint = {x: 0, y: 0};
-        this.currentDragType = 0;
+        this.currentDragType = DragType.None;
         this.pointerOnly = !!opts.pointerOnly;
         this.keyboardOnly = !!opts.keyboardOnly;
         this.keyStrat = opts.keyControl || KeyboardActivateStrategy.Normal;
@@ -388,7 +388,7 @@ export class Interactive implements IDisposable
                     this.dragStart.emit(this.dragStartPoint);
                 }
             }
-            if (this.currentDragType == DragType.None)
+            if (this.currentDragType != DragType.None)
             {
                 this.dragMove.emit(point);
             }
@@ -405,7 +405,7 @@ export class Interactive implements IDisposable
         const touch = isTouch(ev);
         const point = this.mapEvToPoint(ev);
         let shouldCleanUp = true;
-        if (this.currentDragType == DragType.None)
+        if (this.currentDragType != DragType.None)
         {
             this.currentDragType = DragType.None;
             if (this.manager!.enabled)
