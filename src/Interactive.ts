@@ -384,18 +384,7 @@ export class Interactive implements IDisposable
             {
                 if (distSq(point, this.dragStartPoint) >= this.minDragDistSq)
                 {
-                    if(this.draggable == DragStrategy.DragOrClick)
-                    {
-                        this.currentDragType = DragType.Held;
-                    }
-                    else if (this.draggable == DragStrategy.DragWithStickyClick) 
-                    {
-                        this.currentDragType = DragType.StickyClick;
-                    }
-                    else if (this.draggable == DragStrategy.DragWithStickyClickTap)
-                    {
-                        this.currentDragType = DragType.StickyTap;
-                    }
+                    this.currentDragType = DragType.Held;
                     this.dragStart.emit(this.dragStartPoint);
                 }
             }
@@ -428,9 +417,15 @@ export class Interactive implements IDisposable
         {
             if (this.manager!.enabled)
             {
-                if (this.draggable == DragStrategy.DragWithStickyClick && !touch)
+                if (!touch && (this.draggable == DragStrategy.DragWithStickyClick || this.draggable == DragStrategy.DragWithStickyClickTap))
                 {
                     this.currentDragType = DragType.StickyClick;
+                    this.dragStart.emit(point);
+                    shouldCleanUp = false;
+                }
+                else if (touch && this.draggable == DragStrategy.DragWithStickyClickTap)
+                {
+                    this.currentDragType = DragType.StickyTap;
                     this.dragStart.emit(point);
                     shouldCleanUp = false;
                 }
@@ -441,8 +436,8 @@ export class Interactive implements IDisposable
             }
         }
 
-        this.activePointerId = -1;
         if(shouldCleanUp){
+            this.activePointerId = -1;
             this.removeWindowListeners();
         }
     }
@@ -451,7 +446,7 @@ export class Interactive implements IDisposable
     {
         if (this.activePointerId != this.getId(ev)) return;
 
-        if (this.draggable)
+        if (this.currentDragType)
         {
             this.currentDragType = DragType.None;
             if (this.manager!.enabled)
