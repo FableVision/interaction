@@ -334,21 +334,11 @@ export class Interactive implements IDisposable
 
             const point = this.mapEvToPoint(ev);
 
-            if (this.draggable == DragStrategy.DragOnly) 
+            if (this.draggable == DragStrategy.DragOnly)
             {
                 this.currentDragType = DragType.Held;
-            }
-            else if (this.draggable == DragStrategy.DragWithStickyClick || this.draggable == DragStrategy.DragWithStickyClickTap)
-            {
-                if(isTouch(ev))
-                {
-                    this.currentDragType = DragType.StickyTap;
-                }
-                else {
-                    this.currentDragType = DragType.StickyClick;
-                }
                 this.dragStart.emit(point);
-            }            
+            }
             else
             {
                 this.dragStartPoint.x = point.x;
