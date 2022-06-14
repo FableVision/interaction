@@ -278,6 +278,7 @@ export class Interactive implements IDisposable
     public cancelDrag(): void
     {
         this.activePointerId = -1;
+        this.currentDragType = DragType.None;
         this.removeWindowListeners();
     }
 
