@@ -331,7 +331,7 @@ export class Interactive implements IDisposable
         {
             ev.preventDefault();
             // if we are already dragging due to sticky click, we don't need to emit anything else
-            if (this.currentDragType != DragType.None) return;
+            if (this.currentDragType) return;
 
             const point = this.mapEvToPoint(ev);
 
@@ -361,7 +361,8 @@ export class Interactive implements IDisposable
     private onPointerMove(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         if (!this.manager!.enabled) return;
-        if ((this.activePointerId != this.getId(ev)) && this.currentDragType != DragType.StickyTap) {
+        if ((this.activePointerId != this.getId(ev)) && this.currentDragType != DragType.StickyTap)
+        {
             return;
         }
 
@@ -379,7 +380,7 @@ export class Interactive implements IDisposable
                     this.dragStart.emit(this.dragStartPoint);
                 }
             }
-            if (this.currentDragType != DragType.None)
+            if (this.currentDragType)
             {
                 this.dragMove.emit(point);
             }
@@ -396,7 +397,7 @@ export class Interactive implements IDisposable
         const touch = isTouch(ev);
         const point = this.mapEvToPoint(ev);
         let shouldCleanUp = true;
-        if (this.currentDragType != DragType.None)
+        if (this.currentDragType)
         {
             this.currentDragType = DragType.None;
             if (this.manager!.enabled)
@@ -427,7 +428,8 @@ export class Interactive implements IDisposable
             }
         }
 
-        if(shouldCleanUp){
+        if (shouldCleanUp)
+        {
             this.activePointerId = -1;
             this.removeWindowListeners();
         }
