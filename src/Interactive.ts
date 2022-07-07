@@ -286,7 +286,7 @@ export class Interactive implements IDisposable
     {
         recipient.activePointerId = this.activePointerId;
         recipient.pointerIn = true;
-        recipient.currentDragType = DragType.Held;
+        recipient.currentDragType = this.currentDragType;
         recipient.addWindowEvents();
 
         this.cancelDrag();
@@ -454,7 +454,7 @@ export class Interactive implements IDisposable
 
     private getId(ev: PointerEvent|TouchEvent|MouseEvent): number
     {
-        if (SUPPORTS_POINTERS && ev instanceof PointerEvent && ev.pointerId == this.activePointerId)
+        if (SUPPORTS_POINTERS && ev instanceof PointerEvent)
         {
             return ev.pointerId;
         }
