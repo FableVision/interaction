@@ -1,4 +1,4 @@
-import { IDisposable, Event } from '@fablevision/utils';
+import { IDisposable, Event, DoubleEvent } from '@fablevision/utils';
 import type { InteractionManager, InteractiveList } from './InteractionManager';
 import { GROUP_CLASS } from './internal';
 
@@ -100,9 +100,9 @@ export class Interactive implements IDisposable
     public onBlur: Event<boolean>;
     /** Event when activated (clicked, hit enter, dwell trigger). Event data is global position (game space) if done via (real) mouse/touch, null otherwise. */
     public onActivate: Event<IPoint | null>;
-    public dragStart: Event<IPoint>;
-    public dragMove: Event<IPoint>;
-    public dragStop: Event<IPoint>;
+    public dragStart: DoubleEvent<IPoint, DragType>;
+    public dragMove: DoubleEvent<IPoint, DragType>;
+    public dragStop: DoubleEvent<IPoint, DragType>;
     public keyStart: Event<void>;
     public keyStop: Event<void>;
     /** Always enable dwell activation on this item. */
@@ -136,9 +136,9 @@ export class Interactive implements IDisposable
         this.onFocus = new Event();
         this.onBlur = new Event();
         this.onActivate = new Event();
-        this.dragStart = new Event();
-        this.dragMove = new Event();
-        this.dragStop = new Event();
+        this.dragStart = new DoubleEvent();
+        this.dragMove = new DoubleEvent();
+        this.dragStop = new DoubleEvent();
         this.keyStart = new Event();
         this.keyStop = new Event();
         this.alwaysDwell = !!opts.alwaysDwell;
@@ -338,7 +338,7 @@ export class Interactive implements IDisposable
             if (this.draggable == DragStrategy.DragOnly)
             {
                 this.currentDragType = DragType.Held;
-                this.dragStart.emit(point);
+                this.dragStart.emit(point, this.currentDragType);
             }
             else
             {
@@ -377,12 +377,12 @@ export class Interactive implements IDisposable
                 if (distSq(point, this.dragStartPoint) >= this.minDragDistSq)
                 {
                     this.currentDragType = DragType.Held;
-                    this.dragStart.emit(this.dragStartPoint);
+                    this.dragStart.emit(this.dragStartPoint, this.currentDragType);
                 }
             }
             if (this.currentDragType)
             {
-                this.dragMove.emit(point);
+                this.dragMove.emit(point, this.currentDragType);
             }
         }
     }
@@ -402,7 +402,7 @@ export class Interactive implements IDisposable
             this.currentDragType = DragType.None;
             if (this.manager!.enabled)
             {
-                this.dragStop.emit(point);
+                this.dragStop.emit(point, this.currentDragType);
             }
         }
         else if (this.pointerIn || touch)
@@ -412,13 +412,13 @@ export class Interactive implements IDisposable
                 if (!touch && (this.draggable == DragStrategy.DragWithStickyClick || this.draggable == DragStrategy.DragWithStickyClickTap))
                 {
                     this.currentDragType = DragType.StickyClick;
-                    this.dragStart.emit(point);
+                    this.dragStart.emit(point, this.currentDragType);
                     shouldCleanUp = false;
                 }
                 else if (touch && this.draggable == DragStrategy.DragWithStickyClickTap)
                 {
                     this.currentDragType = DragType.StickyTap;
-                    this.dragStart.emit(point);
+                    this.dragStart.emit(point, this.currentDragType);
                     shouldCleanUp = false;
                 }
                 else if (this.draggable != DragStrategy.DragOnly)
@@ -444,7 +444,7 @@ export class Interactive implements IDisposable
             this.currentDragType = DragType.None;
             if (this.manager!.enabled)
             {
-                this.dragStop.emit(this.mapEvToPoint(ev));
+                this.dragStop.emit(this.mapEvToPoint(ev), this.currentDragType);
             }
         }
 
