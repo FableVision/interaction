@@ -55,6 +55,11 @@ function getFocusCSS(): string
     outline-width: ${CSS_CONFIG.groupWidth}px !important;
 }
 
+.${INTERACTIVE_CLASS} {
+    /* Prevent browser from interfering with our drags */
+    touch-action: none;
+}
+
 .${DWELL_CLASS} {
     animation-duration: ${CSS_CONFIG.dwellSeconds}s;
     animation-name: dwell-activate;
