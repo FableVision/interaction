@@ -91,6 +91,49 @@ export interface IPoint
 let NEXT_FOCUS_FROM_MOUSE = false;
 let NEXT_BLUR_FROM_MOUSE = false;
 
+class StickyDragIdChecker
+{
+    private used: Set<number> = new Set();
+    private idsForRemoval: number[] = [];
+    private timeout: number = 0;
+
+    public claimId(id: number)
+    {
+        this.used.add(id);
+    }
+
+    public freeId(id: number)
+    {
+        // delete ids later, to avoid any possibility of a click being handled by the claimant, the id freed, and then
+        // the sticky dragged item getting told about the pointer up
+        this.idsForRemoval.push(id);
+        if (!this.timeout)
+        {
+            this.timeout = setTimeout(this.deleteIdsLater, 0);
+        }
+    }
+
+    private deleteIdsLater = () =>
+    {
+        for (let i = 0; i < this.idsForRemoval.length; ++i)
+        {
+            this.used.delete(this.idsForRemoval[i]);
+        }
+        this.idsForRemoval.length = 0;
+        this.timeout = 0;
+    }
+
+    public isIdFree(id: number)
+    {
+        return !this.used.has(id);
+    }
+}
+/**
+ * Singleton object to track pointer id usage between items so that a sticky drag can't end by tapping on another
+ * interactive item.
+ */
+const idTracker = new StickyDragIdChecker();
+
 export class Interactive implements IDisposable
 {
     public manager: InteractionManager | null = null;
@@ -241,6 +284,10 @@ export class Interactive implements IDisposable
     private updateHTMLEnabled()
     {
         this.htmlElement.style.display = (this._visible && this._enabled) ? 'block' : 'none';
+        if (!(this._visible && this._enabled) && this.activePointerId > -1)
+        {
+            idTracker.freeId(this.activePointerId);
+        }
     }
 
     public updatePosition(): void
@@ -252,6 +299,10 @@ export class Interactive implements IDisposable
 
     public dispose(): void
     {
+        if (this.activePointerId > -1)
+        {
+            idTracker.freeId(this.activePointerId);
+        }
         this.onFocus.dispose();
         this.onBlur.dispose();
         this.onActivate.dispose();
@@ -275,8 +326,12 @@ export class Interactive implements IDisposable
         this.htmlElement.blur();
     }
 
-    public cancelDrag(): void
+    public cancelDrag(keepIdClaimed = false): void
     {
+        if (!keepIdClaimed && this.activePointerId > -1)
+        {
+            idTracker.freeId(this.activePointerId);
+        }
         this.activePointerId = -1;
         this.currentDragType = DragType.None;
         this.removeWindowListeners();
@@ -289,7 +344,7 @@ export class Interactive implements IDisposable
         recipient.currentDragType = this.currentDragType;
         recipient.addWindowEvents();
 
-        this.cancelDrag();
+        this.cancelDrag(true);
     }
 
     private onPointerOver(ev: PointerEvent|TouchEvent|MouseEvent)
@@ -324,6 +379,7 @@ export class Interactive implements IDisposable
 
         this.activePointerId = this.getId(ev);
         this.pointerIn = true;
+        idTracker.claimId(this.activePointerId);
 
         this.addWindowEvents();
 
@@ -361,7 +417,12 @@ export class Interactive implements IDisposable
     private onPointerMove(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         if (!this.manager!.enabled) return;
-        if ((this.activePointerId != this.getId(ev)) && this.currentDragType != DragType.StickyTap)
+        const id = this.getId(ev);
+        // Bail if the id is not our id, and the following condition is not met:
+        // * we are performing a sticky tap (we'd get a new touch id for the 2nd tap)
+        // * _and_ the pointer id has not been claimed by another item during its pointer down
+        if ((this.activePointerId != id) &&
+            (this.currentDragType != DragType.StickyTap || !idTracker.isIdFree(id)))
         {
             return;
         }
@@ -390,7 +451,15 @@ export class Interactive implements IDisposable
     private onPointerUp(ev: PointerEvent|TouchEvent|MouseEvent)
     {
         // console.log('pointer up', ev);
-        if ((this.activePointerId != this.getId(ev)) && (this.currentDragType != DragType.StickyTap)) return;
+        const id = this.getId(ev);
+        // Bail if the id is not our id, and the following condition is not met:
+        // * we are performing a sticky tap (we'd get a new touch id for the 2nd tap)
+        // * _and_ the pointer id has not been claimed by another item during its pointer down
+        if ((this.activePointerId != id) &&
+            (this.currentDragType != DragType.StickyTap || !idTracker.isIdFree(id)))
+        {
+            return;
+        }
 
         ev.preventDefault();
 
@@ -420,6 +489,8 @@ export class Interactive implements IDisposable
                     this.currentDragType = DragType.StickyTap;
                     this.dragStart.emit(point, this.currentDragType);
                     shouldCleanUp = false;
+                    // still free the pointer id
+                    idTracker.freeId(this.activePointerId);
                 }
                 else if (this.draggable != DragStrategy.DragOnly)
                 {
@@ -430,6 +501,7 @@ export class Interactive implements IDisposable
 
         if (shouldCleanUp)
         {
+            idTracker.freeId(this.activePointerId);
             this.activePointerId = -1;
             this.removeWindowListeners();
         }
@@ -448,6 +520,7 @@ export class Interactive implements IDisposable
             }
         }
 
+        idTracker.freeId(this.activePointerId);
         this.activePointerId = -1;
         this.removeWindowListeners();
     }
