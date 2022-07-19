@@ -501,6 +501,7 @@ export class Interactive implements IDisposable
 
         if (shouldCleanUp)
         {
+            if (touch) this.blur();
             idTracker.freeId(this.activePointerId);
             this.activePointerId = -1;
             this.removeWindowListeners();
