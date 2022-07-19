@@ -1,6 +1,6 @@
 {
     "name": "@fablevision/interaction",
-    "version": "1.1.14",
+    "version": "1.1.19",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -9,7 +9,10 @@
         "dist/"
     ],
     "scripts": {
-        "build": "tsc"
+        "build": "tsc",
+        "prepublish": "npm run build",
+        "prepare": "npm run build",
+        "postpublish": "git push && git push --tags"
     },
     "repository": {
         "type": "git",
@@ -36,7 +39,7 @@
         "@pixi/math": "^6.0.0"
     },
     "dependencies": {
-        "@fablevision/utils": "^1.0.0",
+        "@fablevision/utils": "^1.1.0",
         "@pixi/runner": "^6.3.0",
         "@types/keyboardjs": "^2.5.0",
         "keyboardjs": "^2.6.1"
