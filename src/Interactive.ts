@@ -258,6 +258,8 @@ export class Interactive implements IDisposable
                 IGNORE_NEXT_FOCUS = false;
                 // clear browser focus? this could be removed without breaking anything
                 this.blur();
+                // in case the browser wasn't going to apply focus, clear the flag right after
+                setTimeout(clearIgnoreFocus, 0);
                 // absolutely do not emit the focus event
                 return;
             }
@@ -524,8 +526,6 @@ export class Interactive implements IDisposable
             {
                 // ignore the focus that triggers from the pointer up event
                 IGNORE_NEXT_FOCUS = true;
-                // in case the browser wasn't going to apply focus, clear the flag right after
-                setTimeout(clearIgnoreFocus, 0);
             }
             idTracker.freeId(this.activePointerId);
             this.activePointerId = -1;
