@@ -90,6 +90,15 @@ export interface IPoint
  */
 let NEXT_FOCUS_FROM_MOUSE = false;
 let NEXT_BLUR_FROM_MOUSE = false;
+/**
+ * Touch end events apply focus to elements after the event is handled, and that messes with our focus listeners.
+ * Instead, this flag lets us ignore focus events immediately after a touch end.
+ */
+let IGNORE_NEXT_FOCUS = false;
+function clearIgnoreFocus()
+{
+    IGNORE_NEXT_FOCUS = false;
+}
 
 class StickyDragIdChecker
 {
@@ -244,6 +253,14 @@ export class Interactive implements IDisposable
             // this.htmlElement.addEventListener('click', (ev) => console.log('Caught mystery click', ev));
         }
         this.htmlElement.addEventListener('focus', () => {
+            if (IGNORE_NEXT_FOCUS)
+            {
+                IGNORE_NEXT_FOCUS = false;
+                // clear browser focus? this could be removed without breaking anything
+                this.blur();
+                // absolutely do not emit the focus event
+                return;
+            }
             const fromMouse = NEXT_FOCUS_FROM_MOUSE;
             NEXT_FOCUS_FROM_MOUSE = false;
             this.onFocus.emit(fromMouse);
@@ -280,6 +297,8 @@ export class Interactive implements IDisposable
         this._enabled = enabled;
         this.updateHTMLEnabled();
     }
+
+    public get isBeingHeld() : boolean { return this.activePointerId >= 0; }
 
     private updateHTMLEnabled()
     {
@@ -501,7 +520,13 @@ export class Interactive implements IDisposable
 
         if (shouldCleanUp)
         {
-            if (touch) this.blur();
+            if (touch)
+            {
+                // ignore the focus that triggers from the pointer up event
+                IGNORE_NEXT_FOCUS = true;
+                // in case the browser wasn't going to apply focus, clear the flag right after
+                setTimeout(clearIgnoreFocus, 0);
+            }
             idTracker.freeId(this.activePointerId);
             this.activePointerId = -1;
             this.removeWindowListeners();

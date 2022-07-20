@@ -238,7 +238,7 @@ export class InteractionManager
     {
         if (!this.enabled) return;
 
-        if (this.current)
+        if (this.current && !this.current.isBeingHeld)
         {
             this.current.onActivate.emit(null);
 
@@ -320,7 +320,7 @@ export class InteractionManager
 
         if (!this.enabled) return;
 
-        if (target.alwaysDwell || this.useDwell)
+        if ((target.alwaysDwell || this.useDwell) && ! target.isBeingHeld)
         {
             this.dwellTimeout = setTimeout(this.activate, CSS_CONFIG.dwellSeconds * 1000) as any;
             target.htmlElement.classList.add(DWELL_CLASS);
