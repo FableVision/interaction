@@ -55,6 +55,11 @@ function getFocusCSS(): string
     outline-width: ${CSS_CONFIG.groupWidth}px !important;
 }
 
+.${INTERACTIVE_CLASS} {
+    /* Prevent browser from interfering with our drags */
+    touch-action: none;
+}
+
 .${DWELL_CLASS} {
     animation-duration: ${CSS_CONFIG.dwellSeconds}s;
     animation-name: dwell-activate;
@@ -233,7 +238,7 @@ export class InteractionManager
     {
         if (!this.enabled) return;
 
-        if (this.current)
+        if (this.current && !this.current.isBeingHeld)
         {
             this.current.onActivate.emit(null);
 
@@ -315,7 +320,7 @@ export class InteractionManager
 
         if (!this.enabled) return;
 
-        if (target.alwaysDwell || this.useDwell)
+        if ((target.alwaysDwell || this.useDwell) && ! target.isBeingHeld)
         {
             this.dwellTimeout = setTimeout(this.activate, CSS_CONFIG.dwellSeconds * 1000) as any;
             target.htmlElement.classList.add(DWELL_CLASS);
