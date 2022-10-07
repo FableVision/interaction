@@ -16,15 +16,23 @@ const keyboard = new Keyboard();
 const removeListener = Keyboard.instance.add('ctrl + s', () => save());
 ```
 
+## Importing
+The main classes can be imported with `import { InteractionManager, Keyboard } from '@fablevision/interaction';`, but each plugin handler should be imported like so: `import { PhaserHandler } from '@fablevision/interaction/dist/phaser';`
+
+Current plugin support: Pixi, Phaser 3
+
 ## Interaction usage
 ```javascript
 // keyboard must be created first
 const keyboard = new Keyboard();
 // initialize singleton
+// note that this should be done AFTER the constructor for something like Phaser, as when setting up the Handler this.game isn't generated until after construction
 const interaction = new InteractionManager({
     accessiblityDiv: 'interaction',
     renderer: new PixiHandler(myPixiRenderer),
 });
+// manually enable interaction manager (there will be no input handling otherwise)
+interaction.enabled = true;
 
 // elsewhere in code
 const buttonInteractive = new Interactive({
