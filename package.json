@@ -16,14 +16,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://gitlab.com/fablevision/public-utils/interaction.git"
+        "url": "https://github.com/FableVision/interaction.git"
     },
     "author": "",
     "license": "MIT",
     "bugs": {
-        "url": "https://gitlab.com/fablevision/public-utils/interaction/issues"
+        "url": "https://github.com/FableVision/interaction/issues"
     },
-    "homepage": "https://gitlab.com/fablevision/public-utils/interaction#readme",
+    "homepage": "https://github.com/FableVision/interaction#readme",
     "devDependencies": {
         "@pixi/constants": "^6.3.0",
         "@pixi/core": "^6.0.0",
@@ -32,6 +32,7 @@
         "@pixi/settings": "^6.3.0",
         "@pixi/utils": "^6.3.0",
         "@pixi/extensions": "^6.0.0",
+        "phaser": "^3.55.2",
         "typescript": "^4.5.0"
     },
     "peerDependencies": {

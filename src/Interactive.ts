@@ -395,8 +395,8 @@ export class Interactive implements IDisposable
         if (!this.manager!.enabled) return;
         // console.log('pointer down', ev);
         if (this.activePointerId >= 0) return;
-        
-        NEXT_FOCUS_FROM_MOUSE = true
+
+        NEXT_FOCUS_FROM_MOUSE = true;
         this.activePointerId = this.getId(ev);
         this.pointerIn = true;
         idTracker.claimId(this.activePointerId);

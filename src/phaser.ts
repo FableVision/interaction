@@ -2,13 +2,15 @@ import type { GameObjects } from 'phaser';
 import { Interactive, InteractiveOpts, IPoint, } from './Interactive';
 import { IRendererPlugin } from './InteractionManager';
 
-export class PhaserInteractive extends Interactive {
+export class PhaserInteractive extends Interactive
+{
     /** The sprite object this represents */
     private objectDisplay: Phaser.GameObjects.Sprite;
     private transformMatrix: Phaser.GameObjects.Components.TransformMatrix;
     private game: Phaser.Game;
 
-    constructor(opts: InteractiveOpts & { phaser: Phaser.GameObjects.Sprite, game: Phaser.Game }) {
+    constructor(opts: InteractiveOpts & { phaser: Phaser.GameObjects.Sprite, game: Phaser.Game })
+    {
         super(opts);
 
         this.transformMatrix = new Phaser.GameObjects.Components.TransformMatrix();
@@ -17,15 +19,18 @@ export class PhaserInteractive extends Interactive {
     }
 
     public get visible(): boolean { return this._visible; }
-    public set visible(visible: boolean) {
+    public set visible(visible: boolean)
+    {
         this.objectDisplay.visible = visible;
         super.visible = visible;
     }
 
-    public updatePosition(): void {
+    public updatePosition(): void
+    {
         const div = this.htmlElement;
         const hitArea = (this.objectDisplay as any).hitArea;
-        if (hitArea) {
+        if (hitArea)
+        {
             this.objectDisplay.getWorldTransformMatrix(this.transformMatrix);
             div.style.left = `${this.transformMatrix.tx + (hitArea.x * this.transformMatrix.a)}px`;
             div.style.top = `${this.transformMatrix.ty + (hitArea.y * this.transformMatrix.d)}px`;
@@ -33,7 +38,8 @@ export class PhaserInteractive extends Interactive {
             div.style.width = `${hitArea.width * this.transformMatrix.a}px`;
             div.style.height = `${hitArea.height * this.transformMatrix.d}px`;
         }
-        else {
+        else
+        {
             const bounds = this.objectDisplay.getBounds();
             div.style.left = `${bounds.x}px`;
             div.style.top = `${bounds.y}px`;
@@ -43,16 +49,19 @@ export class PhaserInteractive extends Interactive {
     }
 }
 
-export class PhaserHandler implements IRendererPlugin {
+export class PhaserHandler implements IRendererPlugin
+{
     private phaser: typeof Phaser.Renderer;
     private game: Phaser.Game;
 
-    constructor(phaser: typeof Phaser.Renderer, game: Phaser.Game) {
+    constructor(phaser: typeof Phaser.Renderer, game: Phaser.Game)
+    {
         this.phaser = phaser;
         this.game = game;
     }
 
-    mapClientPosToPoint(x: number, y: number): IPoint {
+    mapClientPosToPoint(x: number, y: number): IPoint
+    {
         const view = this.game.canvas;
         const rect = view.getBoundingClientRect();
         const resolutionMultiplier = 1.0 / this.game.scale.getMaxZoom();
@@ -63,7 +72,8 @@ export class PhaserHandler implements IRendererPlugin {
         };
     }
 
-    forceTransformUpdate(): void {
+    forceTransformUpdate(): void
+    {
         // TODO
         // legitimately not sure of way to do what this is asking in phaser, just gonna hope this is never really needed for now
         // this.game.

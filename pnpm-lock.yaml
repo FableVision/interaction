@@ -5,12 +5,14 @@ specifiers:
   '@pixi/constants': ^6.3.0
   '@pixi/core': ^6.0.0
   '@pixi/display': ^6.0.0
+  '@pixi/extensions': ^6.0.0
   '@pixi/math': ^6.0.0
   '@pixi/runner': ^6.3.0
   '@pixi/settings': ^6.3.0
   '@pixi/utils': ^6.3.0
   '@types/keyboardjs': ^2.5.0
   keyboardjs: ^2.6.1
+  phaser: ^3.55.2
   typescript: ^4.5.0
 
 dependencies:
@@ -23,9 +25,11 @@ devDependencies:
   '@pixi/constants': 6.3.0
   '@pixi/core': 6.3.0_870c696c842f9628d3722803d5f1363f
   '@pixi/display': 6.3.0_847174e7ddcf04d2e651eb5a179aff75
+  '@pixi/extensions': 6.5.5
   '@pixi/math': 6.3.0
   '@pixi/settings': 6.3.0
   '@pixi/utils': 6.3.0_144ef662441eafe6efbce13303d1e8b8
+  phaser: 3.55.2
   typescript: 4.6.3
 
 packages:
@@ -66,6 +70,10 @@ packages:
       '@pixi/math': 6.3.0
       '@pixi/settings': 6.3.0
       '@pixi/utils': 6.3.0_144ef662441eafe6efbce13303d1e8b8
+    dev: true
+
+  /@pixi/extensions/6.5.5:
+    resolution: {integrity: sha512-b85GH6xzh0SgPejLguCLBhq9zoq6gizW8Zwyb+W1s1Q+B6sP6LtAMeir3ZefiXT3nOakeUGEv7bLp76Aon3lyw==}
     dev: true
 
   /@pixi/math/6.3.0:
@@ -116,6 +124,14 @@ packages:
     resolution: {integrity: sha512-tvtQIeLVHjDkJYnzf2dgVMxfuSGJeM/7UCG17TT4EumTfNtF+0nebF/4zWOIkCreAbtNqhGEboB6BWrwqNaw4Q==}
     dev: true
 
+  /eventemitter3/4.0.7:
+    resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
+    dev: true
+
+  /inherits/2.0.3:
+    resolution: {integrity: sha512-x00IRNXNy63jwGkJmzPigoySHbaqpNuzKbBOmzK+g2OdZpQ9w+sxCN+VSB3ja7IAge2OP2qpfxTjeNcyjmW1uw==}
+    dev: true
+
   /ismobilejs/1.1.1:
     resolution: {integrity: sha512-VaFW53yt8QO61k2WJui0dHf4SlL8lxBofUuUmwBo0ljPk0Drz2TiuDW4jo3wDcv41qy/SxrJ+VAzJ/qYqsmzRw==}
     dev: true
@@ -123,6 +139,25 @@ packages:
   /keyboardjs/2.6.4:
     resolution: {integrity: sha512-xDiNwiwH3KUqap++RFJiLAXzbvRB5Yw08xliuceOgLhM1o7g1puKKR9vWy6wp9H/Bi4VP0+SQMpiWXMWWmR6rA==}
     dev: false
+
+  /path/0.12.7:
+    resolution: {integrity: sha512-aXXC6s+1w7otVF9UletFkFcDsJeO7lSZBPUQhtb5O0xJe8LtYhj/GxldoL09bBj9+ZmE2hNoHqQSFMN5fikh4Q==}
+    dependencies:
+      process: 0.11.10
+      util: 0.10.4
+    dev: true
+
+  /phaser/3.55.2:
+    resolution: {integrity: sha512-amKXsbb2Ht29dGPKvt1edq3yGGYKtq8373GpJYGKPNPnneYY6MtVTOgjHDuZwtmUyK4v86FugkT3hzW/N4tjxQ==}
+    dependencies:
+      eventemitter3: 4.0.7
+      path: 0.12.7
+    dev: true
+
+  /process/0.11.10:
+    resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
+    engines: {node: '>= 0.6.0'}
+    dev: true
 
   /punycode/1.3.2:
     resolution: {integrity: sha1-llOgNvt8HuQjQvIyXM7v6jkmxI0=}
@@ -145,4 +180,10 @@ packages:
     dependencies:
       punycode: 1.3.2
       querystring: 0.2.0
+    dev: true
+
+  /util/0.10.4:
+    resolution: {integrity: sha512-0Pm9hTQ3se5ll1XihRic3FDIku70C+iHUdT/W926rSgHV5QgXsYbKZN8MSC3tJtSkhuROzvsQjAaFENRXr+19A==}
+    dependencies:
+      inherits: 2.0.3
     dev: true
