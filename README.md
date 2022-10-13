@@ -28,14 +28,19 @@ const keyboard = new Keyboard();
 // initialize singleton
 // note that this should be done AFTER the constructor for something like Phaser, as when setting up the Handler this.game isn't generated until after construction
 const interaction = new InteractionManager({
+    // This can be the id of a div, or the HTMLDivElement directly, and will be filled with interactive divs.
+    // *You* are responsible for ensuring that the div is the same size/scale/location as your canvas.
+    // Note that you may need to keep it from scrolling, if elements are sometimes partially offscreen (but still focusable). You may also wish to use `user-select: none;` on it to prevent the text/image selection tinting.
     accessiblityDiv: 'interaction',
+    // a handler specific to your canvas rendering style
     renderer: new PixiHandler(myPixiRenderer),
 });
 // manually enable interaction manager (there will be no input handling otherwise)
 interaction.enabled = true;
 
 // elsewhere in code
-const buttonInteractive = new Interactive({
+// use the interactive class specific to your canvas rendering style
+const buttonInteractive = new PixiInteractive({
     pixi: myPixiButton,
 });
 buttonInteractive.onActivate.on(() => doTheThing());
