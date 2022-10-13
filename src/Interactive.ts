@@ -1,6 +1,6 @@
 import { IDisposable, Event, DoubleEvent } from '@fablevision/utils';
 import type { InteractionManager, InteractiveList } from './InteractionManager';
-import { GROUP_CLASS } from './internal';
+import { GROUP_CLASS, KEYBOARD, MOUSE, TOUCH } from './internal';
 
 const SUPPORTS_POINTERS = !!window.PointerEvent;
 const SUPPORTS_TOUCH = !!window.TouchEvent && 'ontouchstart' in window;
@@ -88,8 +88,9 @@ export interface IPoint
  * Because we are relying on browser focus events, using a flag that we then consume is the easiest way to
  * determine if the focus event happened from a mouseover.
  */
-let NEXT_FOCUS_FROM_MOUSE = false;
-let NEXT_BLUR_FROM_MOUSE = false;
+let NEXT_FOCUS_SOURCE = KEYBOARD;
+let NEXT_BLUR_SOURCE = KEYBOARD;
+
 /**
  * Touch end events apply focus to elements after the event is handled, and that messes with our focus listeners.
  * Instead, this flag lets us ignore focus events immediately after a touch end.
@@ -146,6 +147,10 @@ const idTracker = new StickyDragIdChecker();
 export class Interactive implements IDisposable
 {
     public manager: InteractionManager | null = null;
+    /**
+     * Source of current focus. Should be treated as read-only, and primarily for InteractionManager's use.
+     */
+    public focusSource: typeof TOUCH | typeof MOUSE | typeof KEYBOARD = KEYBOARD;
     /** Event when the item becomes focused. Event data is `true` if done via (real) mouse/touch, false otherwise. */
     public onFocus: Event<boolean>;
     /** Event when the item loses focus. Event data is `true` if done via (real) mouse/touch, false otherwise. */
@@ -261,15 +266,15 @@ export class Interactive implements IDisposable
                 // absolutely do not emit the focus event
                 return;
             }
-            const fromMouse = NEXT_FOCUS_FROM_MOUSE;
-            NEXT_FOCUS_FROM_MOUSE = false;
+            const fromMouse = NEXT_FOCUS_SOURCE != KEYBOARD;
+            NEXT_FOCUS_SOURCE = KEYBOARD;
             this.onFocus.emit(fromMouse);
         });
         this.htmlElement.addEventListener('blur', () => {
             // in the off chance that we have a focus() caused by a mouseover before a mouseout is handled,
             // check for both blur and focus flags
-            const fromMouse = NEXT_BLUR_FROM_MOUSE || NEXT_FOCUS_FROM_MOUSE;
-            NEXT_BLUR_FROM_MOUSE = false;
+            const fromMouse = NEXT_BLUR_SOURCE != KEYBOARD || NEXT_FOCUS_SOURCE != KEYBOARD;
+            NEXT_BLUR_SOURCE = KEYBOARD;
             this.onBlur.emit(fromMouse);
         });
         this.htmlElement.style.position = 'absolute';
@@ -370,7 +375,10 @@ export class Interactive implements IDisposable
     {
         if (!this.manager!.focusEnabled) return;
 
-        NEXT_FOCUS_FROM_MOUSE = true;
+        if (ev instanceof TouchEvent || (ev instanceof PointerEvent && ev.pointerType == 'touch'))
+            NEXT_FOCUS_SOURCE = TOUCH;
+        else
+            NEXT_FOCUS_SOURCE = MOUSE;
         this.focus();
         if (this.getId(ev) == this.activePointerId)
         {
@@ -382,7 +390,10 @@ export class Interactive implements IDisposable
     {
         if (!this.manager!.focusEnabled) return;
 
-        NEXT_BLUR_FROM_MOUSE = true;
+        if (ev instanceof TouchEvent || (ev instanceof PointerEvent && ev.pointerType == 'touch'))
+            NEXT_BLUR_SOURCE = TOUCH;
+        else
+            NEXT_BLUR_SOURCE = MOUSE;
         this.blur();
         if (this.getId(ev) == this.activePointerId)
         {
@@ -396,7 +407,10 @@ export class Interactive implements IDisposable
         // console.log('pointer down', ev);
         if (this.activePointerId >= 0) return;
 
-        NEXT_FOCUS_FROM_MOUSE = true;
+        if (ev instanceof TouchEvent || (ev instanceof PointerEvent && ev.pointerType == 'touch'))
+            NEXT_FOCUS_SOURCE = TOUCH;
+        else
+            NEXT_FOCUS_SOURCE = MOUSE;
         this.activePointerId = this.getId(ev);
         this.pointerIn = true;
         idTracker.claimId(this.activePointerId);

@@ -1,7 +1,7 @@
 import { Disposable, DisposableGroup, math } from '@fablevision/utils';
 import { Keyboard, KeyEvent } from './Keyboard';
 import { Interactive, IPoint } from './Interactive';
-import { GROUP_CLASS, INTERACTIVE_CLASS } from './internal';
+import { DWELL, GROUP_CLASS, INTERACTIVE_CLASS, KEYBOARD, MOUSE, TOUCH } from './internal';
 
 /** A list of focusable items that can be tabbed through in order */
 export type InteractiveList = Interactive[];
@@ -40,15 +40,24 @@ export const CSS_CONFIG =
     dwellSeconds: 2,
     dwellOffset: 20,
     color: '#FEA100',
+    /** If mouse/pen triggered focus should be displayed (when not dwelling). */
+    showFocusWithMouse: true,
+    /** If touch triggered focus should be displayed (when not dwelling). */
+    showFocusWithTouch: true,
 };
 
-const DWELL_CLASS = 'dwell-activate-focused';
 function getFocusCSS(): string
 {
     return `.${INTERACTIVE_CLASS}:focus {
     outline-style: ${CSS_CONFIG.normalStyle};
     outline-width: ${CSS_CONFIG.normalWidth}px;
     outline-color: ${CSS_CONFIG.color};
+}
+.${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus {
+    outline-color: ${CSS_CONFIG.showFocusWithMouse ? CSS_CONFIG.color : 'transparent'};
+}
+.${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus {
+    outline-color: ${CSS_CONFIG.showFocusWithTouch ? CSS_CONFIG.color : 'transparent'};
 }
 .${INTERACTIVE_CLASS}.${GROUP_CLASS}:focus {
     outline-style: ${CSS_CONFIG.groupStyle} !important;
@@ -60,7 +69,7 @@ function getFocusCSS(): string
     touch-action: none;
 }
 
-.${DWELL_CLASS} {
+.${INTERACTIVE_CLASS}.${DWELL} {
     animation-duration: ${CSS_CONFIG.dwellSeconds}s;
     animation-name: dwell-activate;
 }
@@ -225,13 +234,24 @@ export class InteractionManager
         this.updateCSS();
     }
 
+    /**
+     * Updates style css for controlling focus indicators. Call this if you change CSS_CONFIG values.
+     */
     public updateCSS(): void
+    {
+        this.removeCSS();
+        this.styleElement.appendChild(document.createTextNode(getFocusCSS()));
+    }
+
+    /**
+     * Removes the style css entirely, allowing replacement with updated or custom values.
+     */
+    public removeCSS(): void
     {
         while (this.styleElement.children.length)
         {
             this.styleElement.removeChild(this.styleElement.children[0]);
         }
-        this.styleElement.appendChild(document.createTextNode(getFocusCSS()));
     }
 
     private activate = () =>
@@ -323,8 +343,9 @@ export class InteractionManager
         if ((target.alwaysDwell || this.useDwell) && ! target.isBeingHeld)
         {
             this.dwellTimeout = setTimeout(this.activate, CSS_CONFIG.dwellSeconds * 1000) as any;
-            target.htmlElement.classList.add(DWELL_CLASS);
+            target.htmlElement.classList.add(DWELL);
         }
+        target.htmlElement.classList.add(target.focusSource);
     }
 
     private onBlurred(target: Interactive)
@@ -336,8 +357,8 @@ export class InteractionManager
             {
                 clearTimeout(this.dwellTimeout);
                 this.dwellTimeout = 0;
-                target.htmlElement.classList.remove(DWELL_CLASS);
             }
+            target.htmlElement.classList.remove(DWELL, MOUSE, TOUCH, KEYBOARD);
         }
     }
 
