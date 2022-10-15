@@ -4,17 +4,31 @@ import KeyEvent = KeyboardJS.KeyEvent;
 
 export { KeyEvent };
 
-export interface KeyConfig
+interface InternalKeyConfig
 {
     /** Name(s) of keys to listen to. */
     keys: string|string[];
     /** Listener for when key is pressed down or repeated. */
-    down: (e: KeyboardJS.KeyEvent) => void;
+    down?: (e: KeyboardJS.KeyEvent) => void;
     /** Listener for when key is released. */
     up?: (e: KeyboardJS.KeyEvent) => void;
 }
 
-export function fromKey(key: string|string[], down: null|((e: KeyboardJS.KeyEvent)=>void), up?: (e: KeyboardJS.KeyEvent)=>void): Disposable
+// Thanks, https://stackoverflow.com/a/49725198
+type RequireAtLeastOne<T, Keys extends keyof T = keyof T> =
+    Pick<T, Exclude<keyof T, Keys>>
+    & {
+        [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>
+    }[Keys];
+
+/**
+ * KeyConfig is an object with a 'keys' property (string/string[]), and at least one of:
+ * * 'down' - callback for when key is pressed down/repeated.
+ * * 'up' - callback for when key is released.
+ */
+export type KeyConfig = RequireAtLeastOne<InternalKeyConfig, 'down'|'up'>;
+
+export function fromKey(key: string|string[], down?: null|((e: KeyboardJS.KeyEvent)=>void), up?: (e: KeyboardJS.KeyEvent)=>void): Disposable
 {
     const context = KeyboardJS.getContext();
 
@@ -82,7 +96,7 @@ export class Keyboard
      * @param up Listener for when key is released.
      * @return A Disposable to remove this listener.
      */
-    public add(key: string | string[], down: (e?: KeyboardJS.KeyEvent) => void, up?: (e?: KeyboardJS.KeyEvent) => void): Disposable;
+    public add(key: string | string[], down?: (e?: KeyboardJS.KeyEvent) => void, up?: (e?: KeyboardJS.KeyEvent) => void): Disposable;
     public add(key: string | string[] | KeyConfig, down?: (e?: KeyboardJS.KeyEvent) => void, up?: (e?: KeyboardJS.KeyEvent) => void): Disposable
     {
         if (typeof key === 'string' || Array.isArray(key))
@@ -101,7 +115,7 @@ export class Keyboard
      * @param configs List of KeyConfigs to add to the context.
      * @return Disposable to remove all of the listeners added.
      */
-    public addForContext(context: string, ...configs: KeyConfig[]): Disposable
+    public addForContext(context: string, ...configs: KeyConfig[]): DisposableGroup
     {
         const rtn = new DisposableGroup();
         KeyboardJS.withContext(context, () =>
@@ -119,9 +133,23 @@ export class Keyboard
      * @param configs List of KeyConfigs to add.
      * @return Disposable to remove all of the listeners added.
      */
-    public addGlobal(...configs: KeyConfig[]): Disposable
+    public addGlobal(...configs: KeyConfig[]): DisposableGroup
     {
         return this.addForContext(this.baseContext, ...configs);
+    }
+
+    /**
+     * Adds a number of key listeners that are only active in a temporary context created and activated
+     * immediately.
+     * @param configs List of KeyConfigs to add.
+     * @return Disposable to remove all of the listeners added and pop the temporary context.
+     */
+    public addQuickContext(...configs: KeyConfig[]): Disposable
+    {
+        const name = String(Math.random());
+        const listeners = this.addForContext(name, ...configs);
+        listeners.add(new Disposable(() => this.popContext(name)));
+        return listeners;
     }
 
     /**
