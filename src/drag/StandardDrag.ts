@@ -1,6 +1,6 @@
-import { DisposableGroup, DoubleEvent, Event, IDisposable, math } from "@fablevision/utils";
-import { DragType, Interactive, IPoint } from "../Interactive";
-import { DragTarget, DragBounds, DragBoundsValidator } from './interfaces';
+import { DisposableGroup, DoubleEvent, Event, math } from '@fablevision/utils';
+import { DragType, Interactive, IPoint } from '../Interactive';
+import { DragTarget, DragBounds, DragBoundsValidator, IDragController } from './interfaces';
 
 export interface StandardDragOpts<T extends DragTarget>
 {
@@ -9,7 +9,10 @@ export interface StandardDragOpts<T extends DragTarget>
     bounds?: DragBounds|DragBoundsValidator<T>;
 }
 
-export class StandardDrag<T extends DragTarget> implements IDisposable
+/**
+ * Manages a standard pointer driven drag, maintaining movement and clamping to optional bounds.
+ */
+export class StandardDrag<T extends DragTarget> implements IDragController<T>
 {
     public target: T;
     private interactive: Interactive;

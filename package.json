@@ -25,13 +25,15 @@
     },
     "homepage": "https://github.com/FableVision/interaction#readme",
     "devDependencies": {
-        "@pixi/constants": "^6.3.0",
-        "@pixi/core": "^6.0.0",
-        "@pixi/display": "^6.0.0",
-        "@pixi/math": "^6.0.0",
-        "@pixi/settings": "^6.3.0",
-        "@pixi/utils": "^6.3.0",
-        "@pixi/extensions": "^6.0.0",
+        "@pixi/constants": "^6.5.0",
+        "@pixi/core": "^6.5.0",
+        "@pixi/display": "^6.5.0",
+        "@pixi/math": "^6.5.0",
+        "@pixi/runner": "^6.5.0",
+        "@pixi/settings": "^6.5.0",
+        "@pixi/ticker": "^6.5.0",
+        "@pixi/utils": "^6.5.0",
+        "@pixi/extensions": "^6.5.0",
         "phaser": "^3.55.2",
         "typescript": "^4.5.0"
     },
@@ -42,8 +44,7 @@
         "phaser": "^3.55.2"
     },
     "dependencies": {
-        "@fablevision/utils": "^1.1.0",
-        "@pixi/runner": "^6.3.0",
+        "@fablevision/utils": "^1.2.1",
         "@types/keyboardjs": "^2.5.0",
         "keyboardjs": "^2.6.1"
     }

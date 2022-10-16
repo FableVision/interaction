@@ -1,7 +1,7 @@
-import { Disposable, DisposableGroup, math, Event, IDisposable } from '@fablevision/utils';
+import { DisposableGroup, math, Event, globalTimer } from '@fablevision/utils';
 import { Interactive, IPoint } from '../Interactive';
 import { Keyboard, KeyConfig } from '../Keyboard';
-import { DragBounds, DragBoundsValidator, DragTarget } from './interfaces';
+import { DragBounds, DragBoundsValidator, DragTarget, IDragController } from './interfaces';
 
 export interface KeyboardFreeDragOpts<T extends DragTarget>
 {
@@ -32,7 +32,11 @@ export interface KeyboardFreeDragOpts<T extends DragTarget>
     moveTickTime?: number;
 }
 
-export class KeyboardFreeDrag<T extends DragTarget> implements IDisposable
+/**
+ * Manages a keyboard drag, using arrow keys (or equivalent) to freely move the target, optionally
+ * clamping to bounds. This requires use of the globalTimer Timer object in order to function.
+ */
+export class KeyboardFreeDrag<T extends DragTarget> implements IDragController<T>
 {
     public target: T;
     private interactive: Interactive;
@@ -40,7 +44,7 @@ export class KeyboardFreeDrag<T extends DragTarget> implements IDisposable
     public dragStarted: Event<T>;
     public dragComplete: Event<T>;
     private cleanup: DisposableGroup;
-    private keyboardContext: Disposable|null;
+    private keyboardContext: DisposableGroup|null;
     private keyConfigs: KeyConfig[];
     private upHeld: boolean;
     private downHeld: boolean;
@@ -161,6 +165,8 @@ export class KeyboardFreeDrag<T extends DragTarget> implements IDisposable
         this.keyboardContext = Keyboard.instance.addQuickContext(...this.keyConfigs);
         this.timer = 0;
         this.dragStarted.emit(this.target);
+        // to our drag cleanup, add the update listener for automatic removal
+        this.keyboardContext.add(globalTimer.add(this.update.bind(this)));
     }
 
     private stopDrag(emit = true): void
@@ -181,7 +187,7 @@ export class KeyboardFreeDrag<T extends DragTarget> implements IDisposable
         this.stopDrag(false);
     }
 
-    private update(deltaSec: number): void
+    private update = (deltaSec: number): void =>
     {
         // if not dragging, just silently bail
         if (!this.keyboardContext) return;

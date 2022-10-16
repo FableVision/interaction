@@ -1,3 +1,6 @@
+import { DoubleEvent, Event, IDisposable } from '@fablevision/utils';
+import { DragType } from '../Interactive';
+
 export interface DragTarget
 {
     x: number;
@@ -13,3 +16,10 @@ export interface DragBounds
 }
 
 export type DragBoundsValidator<T extends DragTarget> = (target: T) => boolean;
+
+export interface IDragController<T extends DragTarget> extends IDisposable
+{
+    dragStarted: Event<T>|DoubleEvent<T, DragType>;
+    dragComplete: Event<T>;
+    cancel(): void;
+}

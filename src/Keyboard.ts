@@ -144,7 +144,7 @@ export class Keyboard
      * @param configs List of KeyConfigs to add.
      * @return Disposable to remove all of the listeners added and pop the temporary context.
      */
-    public addQuickContext(...configs: KeyConfig[]): Disposable
+    public addQuickContext(...configs: KeyConfig[]): DisposableGroup
     {
         const name = String(Math.random());
         const listeners = this.addForContext(name, ...configs);
