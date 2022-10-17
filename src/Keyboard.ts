@@ -149,6 +149,7 @@ export class Keyboard
         const name = String(Math.random());
         const listeners = this.addForContext(name, ...configs);
         listeners.add(new Disposable(() => this.popContext(name)));
+        this.activateContext(name);
         return listeners;
     }
 

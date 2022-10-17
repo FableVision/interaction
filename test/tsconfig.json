@@ -15,11 +15,6 @@
         "types": ["@types/offscreencanvas"]
     },
     "includes": [
-        "./src/*"
-    ],
-    // having to exclude here is silly, tsc shouldn't even be looking in here
-    "exclude": [
-        "test/*",
-        "dist/*",
+        "./index.ts"
     ]
 }
