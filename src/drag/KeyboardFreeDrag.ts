@@ -249,6 +249,8 @@ export class KeyboardFreeDrag<T extends DragTarget> implements IDragController<T
         }
         this.target.x = targX;
         this.target.y = targY;
+        // if auto-updating position doesn't pan out, needs a manual update here
+        // this.interactive.updatePosition();
     }
 
     public dispose(): void

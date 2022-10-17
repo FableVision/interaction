@@ -1,13 +1,27 @@
-import type { GameObjects } from 'phaser';
+import 'phaser';
 import { Interactive, InteractiveOpts, IPoint, } from './Interactive';
 import { IRendererPlugin } from './InteractionManager';
+import { globalTimer, IDisposable } from '@fablevision/utils';
 
+const helperRect = new Phaser.Geom.Rectangle();
+
+function areRectsDifferent(a: Phaser.Geom.Rectangle, b: Phaser.Geom.Rectangle)
+{
+    return a.x != b.x || a.y != b.y || a.width != b.width || a.height != b.height;
+}
+
+/**
+ * PhaserInteractive will attempt to keep the accessibility position synced with the pixi DisplayObject
+ * if globalTimer is running/ticked. Otherwise, you'll need to call updatePosition() manually.
+ */
 export class PhaserInteractive extends Interactive
 {
     /** The sprite object this represents */
     private objectDisplay: Phaser.GameObjects.Sprite;
     private transformMatrix: Phaser.GameObjects.Components.TransformMatrix;
     private game: Phaser.Game;
+    private update: IDisposable;
+    private lastRect: Phaser.Geom.Rectangle;
 
     constructor(opts: InteractiveOpts & { phaser: Phaser.GameObjects.Sprite, game: Phaser.Game })
     {
@@ -16,6 +30,14 @@ export class PhaserInteractive extends Interactive
         this.transformMatrix = new Phaser.GameObjects.Components.TransformMatrix();
         this.objectDisplay = opts.phaser;
         this.game = opts.game;
+        this.lastRect = new Phaser.Geom.Rectangle();
+        this.update = globalTimer.add(() =>
+        {
+            if (this.objectDisplay.visible)
+            {
+                this.updatePosition();
+            }
+        });
     }
 
     public get visible(): boolean { return this._visible; }
@@ -32,19 +54,35 @@ export class PhaserInteractive extends Interactive
         if (hitArea)
         {
             this.objectDisplay.getWorldTransformMatrix(this.transformMatrix);
-            div.style.left = `${this.transformMatrix.tx + (hitArea.x * this.transformMatrix.a)}px`;
-            div.style.top = `${this.transformMatrix.ty + (hitArea.y * this.transformMatrix.d)}px`;
 
-            div.style.width = `${hitArea.width * this.transformMatrix.a}px`;
-            div.style.height = `${hitArea.height * this.transformMatrix.d}px`;
+            helperRect.x = this.transformMatrix.tx + (hitArea.x * this.transformMatrix.a);
+            helperRect.y = this.transformMatrix.ty + (hitArea.y * this.transformMatrix.d);
+            helperRect.width = hitArea.width * this.transformMatrix.a;
+            helperRect.height = hitArea.height * this.transformMatrix.d;
+
+            if (areRectsDifferent(helperRect, this.lastRect))
+            {
+                Phaser.Geom.Rectangle.CopyFrom(helperRect, this.lastRect);
+
+                div.style.left = `${helperRect.x}px`;
+                div.style.top = `${helperRect.y}px`;
+                div.style.width = `${helperRect.width}px`;
+                div.style.height = `${helperRect.height}px`;
+            }
         }
         else
         {
-            const bounds = this.objectDisplay.getBounds();
-            div.style.left = `${bounds.x}px`;
-            div.style.top = `${bounds.y}px`;
-            div.style.width = `${bounds.width}px`;
-            div.style.height = `${bounds.height}px`;
+            const bounds = this.objectDisplay.getBounds(helperRect);
+
+            if (areRectsDifferent(helperRect, this.lastRect))
+            {
+                Phaser.Geom.Rectangle.CopyFrom(bounds, this.lastRect);
+
+                div.style.left = `${bounds.x}px`;
+                div.style.top = `${bounds.y}px`;
+                div.style.width = `${bounds.width}px`;
+                div.style.height = `${bounds.height}px`;
+            }
         }
     }
 }

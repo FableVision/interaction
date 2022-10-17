@@ -85,6 +85,8 @@ export class StandardDrag<T extends DragTarget> implements IDragController<T>
     {
         this.moveTarget(globalPos);
         this.currentDragType = null;
+        // if auto-updating position doesn't pan out, needs a manual update here
+        // this.interactive.updatePosition();
 
         this.dragComplete.emit(this.target);
     }
