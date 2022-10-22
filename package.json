@@ -54,7 +54,7 @@
         "phaser": "^3.55.2"
     },
     "dependencies": {
-        "@fablevision/utils": "^1.2.1",
+        "@fablevision/utils": "^1.2.2",
         "@types/keyboardjs": "^2.5.0",
         "keyboardjs": "^2.6.1"
     }

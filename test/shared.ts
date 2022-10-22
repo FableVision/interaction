@@ -1,4 +1,4 @@
-import { Keyboard, InteractionManager, InteractiveOpts } from '../dist';
+import { Keyboard, InteractionManager, InteractiveOpts, IPoint } from '../dist';
 import { PixiInteractive } from '../dist/pixi';
 import { Text } from '@pixi/text';
 import { Sprite } from '@pixi/sprite';
@@ -9,19 +9,30 @@ export class TestUI extends Container
 {
     public interact: PixiInteractive;
 
-    constructor(text: string, color: number, opts: InteractiveOpts)
+    constructor(text: string | IPoint, color: number, opts: InteractiveOpts)
     {
         super();
 
-        const textObj = new Text(text, { align: 'center', wordWrap: true, wordWrapWidth: 200 });
-        textObj.anchor.set(0.5);
+        let width = 0, height = 0;
+        if (typeof text == 'string')
+        {
+            const textObj = new Text(text, { align: 'center', wordWrap: true, wordWrapWidth: 200 });
+            textObj.anchor.set(0.5);
+            this.addChild(textObj);
+            width = textObj.width + 10;
+            height = textObj.height + 10;
+        }
+        else
+        {
+            width = text.x;
+            height = text.y;
+        }
         const sprite = new Sprite(Texture.WHITE);
-        sprite.width = textObj.width + 10;
-        sprite.height = textObj.height + 10;
+        sprite.width = width;
+        sprite.height = height;
         sprite.anchor.set(0.5);
         sprite.tint = color;
-        this.addChild(sprite);
-        this.addChild(textObj);
+        this.addChildAt(sprite, 0);
 
         this.interact = new PixiInteractive(Object.assign({ pixi: this }, opts));
     }

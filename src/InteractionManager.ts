@@ -2,6 +2,7 @@ import { Disposable, DisposableGroup, math } from '@fablevision/utils';
 import { Keyboard, KeyEvent } from './Keyboard';
 import { Interactive, IPoint } from './Interactive';
 import { DWELL, GROUP_CLASS, INTERACTIVE_CLASS, KEYBOARD, MOUSE, TOUCH } from './internal';
+import { ComplexFocusContext } from './complex';
 
 /** A list of focusable items that can be tabbed through in order */
 export type InteractiveList = Interactive[];
@@ -12,7 +13,7 @@ export interface FullFocusContext
     items: InteractiveList;
     /** If this should be combined with the baseline context. Default is true. */
     allowBaseline?: boolean;
-    /** Name for targetted removal */
+    /** Name for targeted removal */
     name: string;
 }
 
@@ -474,7 +475,7 @@ export class InteractionManager
      * @param asChild If the context should be activated as a child context -
      * the parent context will remain active to mouse interactions, but not tab focusing.
      */
-    public activateContext(context: InteractiveList | FullFocusContext, asChild?: boolean): void
+    public activateContext(context: InteractiveList | FullFocusContext | ComplexFocusContext, asChild?: boolean): void
     {
         if (Array.isArray(context))
         {
@@ -487,7 +488,7 @@ export class InteractionManager
         this.internalActivate(context, asChild ? this.contexts[this.contexts.length - 1] : null);
     }
 
-    private internalActivate(context: FullFocusContext, parent: InternalContext|null)
+    private internalActivate(context: FullFocusContext | ComplexFocusContext, parent: InternalContext|null)
     {
         this.clearFocus();
         if (this.contexts.find(c => c.name === context.name))
@@ -505,49 +506,65 @@ export class InteractionManager
             cleanup: new DisposableGroup(),
             parent,
         };
+        if ('activate' in context && 'deactivate' in context)
+        {
+            context.activate();
+            internal.cleanup.add(context.deactivate);
+        }
         this.contexts.push(internal);
         this.generateContext(internal);
     }
 
-    public enterGroup(item: Interactive, overrideContext?: InteractiveList): string
+    public enterGroup(item: Interactive, overrideContext?: InteractiveList | ComplexFocusContext): string
     {
-        if (!overrideContext && (!item.childContext || !item.childContext.length)) return '';
+        if (!overrideContext && (!item.childContext || (Array.isArray(item.childContext) && !item.childContext.length))) return '';
         // enter non-baseline context of just the item's children
         const tempName = String(Math.random());
-        const items = (overrideContext || item.childContext!).slice();
-        let groupExit: Interactive[]|null = null;
-        if (this.groupEnd == GroupEndStrategy.Exit)
+        let context = overrideContext || item.childContext!;
+        let first = 0;
+        if (Array.isArray(context))
         {
-            groupExit = [
-                new Interactive({
-                    keyboardOnly: true,
-                }),
-                new Interactive({
-                    keyboardOnly: true,
-                }),
-            ];
-            // when this item is focused, pop the context and focus on the group parent again
-            groupExit[0].onFocus.add(() => {
-                this.popContext();
-                item.focus();
-            });
-            groupExit[1].onFocus.add(() => {
-                this.popContext();
-                item.focus();
-            });
-            // bracket the group with an exiter on each side
-            items.unshift(groupExit[0]);
-            items.push(groupExit[1]);
+            const items = context.slice();
+            let groupExit: Interactive[]|null = null;
+            if (this.groupEnd == GroupEndStrategy.Exit)
+            {
+                // adjust index of first item
+                first++;
+                groupExit = [
+                    new Interactive({
+                        keyboardOnly: true,
+                    }),
+                    new Interactive({
+                        keyboardOnly: true,
+                    }),
+                ];
+                // when this item is focused, pop the context and focus on the group parent again
+                groupExit[0].onFocus.add(() => {
+                    this.popContext();
+                    item.focus();
+                });
+                groupExit[1].onFocus.add(() => {
+                    this.popContext();
+                    item.focus();
+                });
+                // bracket the group with an exiter on each side
+                items.unshift(groupExit[0]);
+                items.push(groupExit[1]);
+            }
+            this.internalActivate({items: context, allowBaseline: false, name: tempName}, this.contexts[this.contexts.length - 1]);
+            const newContext = this.contexts[this.contexts.length - 1];
+            newContext.cleanup.add(Keyboard.instance.add(Keyboard.instance.ESC, () => this.popContext(tempName)));
+            if (groupExit)
+            {
+                newContext.cleanup.add(...groupExit);
+            }
+            // focus on the first item, to get past the potential group exit at the start
+            items[first].focus();
         }
-        this.internalActivate({items: items, allowBaseline: false, name: tempName}, this.contexts[this.contexts.length - 1]);
-        const newContext = this.contexts[this.contexts.length - 1];
-        newContext.cleanup.add(Keyboard.instance.add(Keyboard.instance.ESC, () => this.popContext(tempName)));
-        if (groupExit)
+        else
         {
-            newContext.cleanup.add(...groupExit);
+            this.internalActivate(context, this.contexts[this.contexts.length - 1]);
         }
-        // focus on the first item, to get past the potential group exit at the start
-        items[1].focus();
         return tempName;
     }
 
@@ -626,7 +643,8 @@ export class InteractionManager
 
             if (item.childContext)
             {
-                for (const child of item.childContext)
+                const items = Array.isArray(item.childContext) ? item.childContext : item.childContext.items;
+                for (const child of items)
                 {
                     if (child != keep)
                     {
@@ -701,9 +719,10 @@ export class InteractionManager
     private recursiveAddChildren(item: Interactive, existingList: InteractiveList)
     {
         if (!item.childContext) return;
+        const items = Array.isArray(item.childContext) ? item.childContext : item.childContext.items;
         // children need to be added for clicks, but shouldn't be accessible via keyboard
         // in order to simplify keyboard order
-        for (const child of item.childContext)
+        for (const child of items)
         {
             if (child.isGroup)
             {

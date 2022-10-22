@@ -4,8 +4,9 @@ import { Application } from '@pixi/app';
 import { globalTimer } from '@fablevision/utils';
 import { Keyboard, InteractionManager, ControlStrategy } from '../dist';
 import { PixiHandler } from '../dist/pixi';
-import dragTest from './drag';
 import { Test } from './shared';
+import dragTest from './drag';
+import shortcutTest from './keyboardShortcut';
 
 const layoutWidth = 2160;
 const layoutHeight = 1080;
@@ -46,13 +47,13 @@ resize();
 
 // ************************
 // now, the actual test begins
-const tests = [dragTest];
+const tests = [dragTest, shortcutTest];
 let currentIndex = -1;
 let currentTest = null as Test|null;
 
 function next() {
     currentTest?.teardown();
-    currentTest = tests[currentIndex++];
+    currentTest = tests[++currentIndex];
     if (!currentTest)
     {
         currentTest = tests[(currentIndex = 0)];

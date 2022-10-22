@@ -88,6 +88,11 @@ export class PixiInteractive extends Interactive
         }
     }
 
+    public hitTest(globalX: number, globalY: number): boolean
+    {
+        return this.lastRect.contains(globalX, globalY);
+    }
+
     public dispose()
     {
         super.dispose();

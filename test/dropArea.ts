@@ -3,8 +3,8 @@ import { Container } from '@pixi/display';
 import { DragStrategy, drag, InteractionManager } from '../dist';
 import {Test, TestUI} from './shared';
 
-let cleanup = new DisposableGroup();
-const dragTest: Test = {
+const cleanup = new DisposableGroup();
+const dropAreaTest: Test = {
     setup(stage: Container)
     {
         const item = new TestUI('Drag Me', 0x9999ff, {draggable: DragStrategy.DragWithStickyClickTap, minDragDist: 20});
@@ -13,7 +13,6 @@ const dragTest: Test = {
             new drag.StandardDrag({target: item, interactive: item.interact, bounds}),
             new drag.KeyboardFreeDrag({target: item, interactive: item.interact, moveSpeed: 500, bounds})
         );
-        cleanup.add(new Disposable(() => stage.removeChild(item)));
         cleanup.add(controller, item);
 
         item.x = 500;
@@ -27,4 +26,4 @@ const dragTest: Test = {
     },
 };
 
-export default dragTest;
+export default dropAreaTest;

@@ -1,4 +1,5 @@
 import { IDisposable, Event, DoubleEvent } from '@fablevision/utils';
+import { ComplexFocusContext } from './complex';
 import type { InteractionManager, InteractiveList } from './InteractionManager';
 import { GROUP_CLASS, KEYBOARD, MOUSE, TOUCH } from './internal';
 
@@ -66,7 +67,7 @@ export enum DragType {
 export interface InteractiveOpts
 {
     alwaysDwell?: boolean;
-    childContext?: InteractiveList;
+    childContext?: InteractiveList|ComplexFocusContext;
     cursor?: string;
     role?: string;
     label?: string;
@@ -171,7 +172,7 @@ export class Interactive implements IDisposable
     /** The invisible HTML element for this item to handle all clicks & highlighting */
     public htmlElement: HTMLElement;
     /** If this focus item is a group (and should use a different focus UI as a signifier), the child context to be used upon activation */
-    public childContext: InteractiveList | null;
+    public childContext: InteractiveList | ComplexFocusContext | null;
     protected _visible: boolean = true;
     protected _enabled: boolean = true;
     /** ID of pointer that is currently down on the item */
@@ -314,11 +315,22 @@ export class Interactive implements IDisposable
         }
     }
 
+    /**
+     * Implementation specific updating of HTML element positioning. Must be overridden.
+     */
     public updatePosition(): void
     {
         // To be overridden by specific implementations
         this.htmlElement.style.width = '10px';
         this.htmlElement.style.height = '10px';
+    }
+
+    /**
+     * Implementation specific hit testing against item. Must be overridden.
+     */
+    public hitTest(globalX: number, globalY: number): boolean
+    {
+        return false;
     }
 
     public dispose(): void

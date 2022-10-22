@@ -85,6 +85,17 @@ export class PhaserInteractive extends Interactive
             }
         }
     }
+
+    public hitTest(globalX: number, globalY: number): boolean
+    {
+        return this.lastRect.contains(globalX, globalY);
+    }
+
+    public dispose()
+    {
+        super.dispose();
+        this.update.dispose();
+    }
 }
 
 export class PhaserHandler implements IRendererPlugin

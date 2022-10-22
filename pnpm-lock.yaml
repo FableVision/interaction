@@ -1,7 +1,7 @@
 lockfileVersion: 5.3
 
 specifiers:
-  '@fablevision/utils': ^1.2.1
+  '@fablevision/utils': ^1.2.2
   '@pixi/app': ^6.5.0
   '@pixi/constants': ^6.5.0
   '@pixi/core': ^6.5.0
@@ -26,7 +26,7 @@ specifiers:
   webpack-dev-server: ^4.7.4
 
 dependencies:
-  '@fablevision/utils': 1.2.1
+  '@fablevision/utils': 1.2.2
   '@types/keyboardjs': 2.5.0
   keyboardjs: 2.6.4
 
@@ -59,8 +59,8 @@ packages:
     engines: {node: '>=10.0.0'}
     dev: true
 
-  /@fablevision/utils/1.2.1:
-    resolution: {integrity: sha512-gsM/Mu52qTaT7afNDDYavNA4/E2KEb5OReVd8ayWaz1GceTyR7VTDiuhPVBLV3od+l+mGLkB0EQI5NvONjct9A==}
+  /@fablevision/utils/1.2.2:
+    resolution: {integrity: sha512-d0d9+XAT3Ucg63cbPWKzoXPhL8LwQ+styPSi8ItvN5mVdEmjOKf4x4Fzokos1RePA8p7XxwIYQWXbgqpi5nsqw==}
     dependencies:
       '@types/eases': 1.0.2
       eases: 1.0.8
