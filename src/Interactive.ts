@@ -58,10 +58,16 @@ export enum KeyboardActivateStrategy
 }
 
 export enum DragType {
+    /** No active drag. */
     None = 0,
+    /** A drag with a held mouse button or finger touching the screen. */
     Held,
+    /** A mouse driven drag that will release upon the next click (anywhere). */
     StickyClick,
-    StickyTap
+    /** A touch driven drag that will release upon the next tap (anywhere). */
+    StickyTap,
+    /** A keyboard driven drag (non-default, implemenation specific, see the 'drag' namespace). */
+    Keyboard,
 }
 
 export interface InteractiveOpts

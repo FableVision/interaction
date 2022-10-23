@@ -1,8 +1,7 @@
 import { DisposableGroup, DoubleEvent, Event } from '@fablevision/utils';
 import { ComplexFocusContext } from '../complex';
 import { InteractionManager, InteractiveList } from '../InteractionManager';
-import { Interactive } from '../Interactive';
-import { KEYBOARD, MOUSE } from '../internal';
+import { DragType, Interactive } from '../Interactive';
 import { Keyboard } from '../Keyboard';
 import { DragTarget, IDragController } from './interfaces';
 import { StandardDrag } from './StandardDrag';
@@ -26,21 +25,22 @@ export interface DropAreaDragOpts<T extends DragTarget>
  */
 export class DropAreaDrag<T extends DragTarget> implements IDragController<T, number>
 {
-    protected pointer: IDragController<T>;
-    public dragStarted: Event<T>;
+    protected pointer: StandardDrag<T>;
+    public dragStarted: DoubleEvent<T, DragType>;
     public dragComplete: DoubleEvent<T, number>;
     public dragFailed: Event<T>;
     protected dropContext: ComplexFocusContext;
-    protected currentDrag: typeof KEYBOARD | typeof MOUSE | null;
+    protected currentDrag: DragType;
 
     constructor(opts: DropAreaDragOpts<T>)
     {
-        this.currentDrag = null;
+        const includeTarget = opts.includeTarget !== false;
+        this.currentDrag = DragType.None;
         if (Array.isArray(opts.dropAreas))
         {
             const deactivate = new DisposableGroup();
             this.dropContext = {
-                items: (opts.includeTarget && !opts.dropAreas.includes(opts.interactive)) ? opts.dropAreas.concat(opts.interactive) : opts.dropAreas,
+                items: (includeTarget && !opts.dropAreas.includes(opts.interactive)) ? opts.dropAreas.concat(opts.interactive) : opts.dropAreas,
                 activate: () =>
                 {
                     deactivate.add(Keyboard.instance.addQuickContext({
@@ -57,7 +57,7 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
         else
         {
             this.dropContext = opts.dropAreas;
-            if (opts.includeTarget && !this.dropContext.items.includes(opts.interactive))
+            if (includeTarget && !this.dropContext.items.includes(opts.interactive))
             {
                 this.dropContext = Object.assign({}, this.dropContext, {items: this.dropContext.items.concat(opts.interactive)});
             }
@@ -74,10 +74,13 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
             });
         }
         this.pointer = new StandardDrag({target: opts.target, interactive: opts.interactive});
-        this.dragStarted = new Event();
+        this.dragStarted = new DoubleEvent();
         this.dragComplete = new DoubleEvent();
         this.dragFailed = new Event();
-        const start = (target: T) => this.dragStarted.emit(target);
+        const start = (target: T, type: DragType) => {
+            this.currentDrag = type;
+            this.dragStarted.emit(target, type);
+        };
         const end = (target: T) => {
             // find the drop area we dropped the item on
             for (let i = 0; i < this.dropContext.items.length; ++i)
@@ -100,22 +103,24 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
 
             if (this.currentDrag)
             {
+                this.currentDrag = DragType.None;
                 InteractionManager.instance.popContext(this.dropContext.name);
                 return;
             }
-            this.currentDrag = KEYBOARD;
+            this.currentDrag = DragType.Keyboard;
             InteractionManager.instance.activateContext(this.dropContext);
+            this.dragStarted.emit(opts.target, this.currentDrag);
         });
     }
 
     public cancel(): void
     {
         this.pointer.cancel();
-        if (this.currentDrag == KEYBOARD)
+        if (this.currentDrag == DragType.Keyboard)
         {
             InteractionManager.instance.popContext(this.dropContext.name);
         }
-        this.currentDrag = null;
+        this.currentDrag = DragType.None;
     }
 
     public dispose(): void

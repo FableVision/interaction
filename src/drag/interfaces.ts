@@ -17,7 +17,7 @@ export interface DragBounds
 
 export type DragBoundsValidator<T extends DragTarget> = (target: T) => boolean;
 
-export interface IDragController<T extends DragTarget, R = any> extends IDisposable
+export interface IDragController<T extends DragTarget, R = void> extends IDisposable
 {
     dragStarted: Event<T>|DoubleEvent<T, DragType>;
     dragComplete: Event<T>|DoubleEvent<T, R>;

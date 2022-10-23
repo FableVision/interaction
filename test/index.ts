@@ -4,9 +4,10 @@ import { Application } from '@pixi/app';
 import { globalTimer } from '@fablevision/utils';
 import { Keyboard, InteractionManager, ControlStrategy } from '../dist';
 import { PixiHandler } from '../dist/pixi';
-import { Test } from './shared';
+import { Test, TestUI } from './shared';
 import dragTest from './drag';
 import shortcutTest from './keyboardShortcut';
+import dropTest from './dropArea';
 
 const layoutWidth = 2160;
 const layoutHeight = 1080;
@@ -45,9 +46,15 @@ function resize(): void
 window.addEventListener('resize', resize);
 resize();
 
+const nextButton = new TestUI('Next Test', 0xdddddd, {});
+nextButton.position.set(100);
+nextButton.interact.onActivate.add(() => next());
+app.stage.addChild(nextButton);
+focus.setBaseline([], [nextButton.interact]);
+
 // ************************
 // now, the actual test begins
-const tests = [dragTest, shortcutTest];
+const tests = [dragTest, shortcutTest, dropTest];
 let currentIndex = -1;
 let currentTest = null as Test|null;
 
@@ -61,5 +68,4 @@ function next() {
     currentTest.setup(app.stage);
 }
 
-keyboard.addGlobal({keys: 'shift + backspace', up: next});
 next();
