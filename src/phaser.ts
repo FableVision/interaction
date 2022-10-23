@@ -120,18 +120,4 @@ export class PhaserHandler implements IRendererPlugin
             y: ((y - rect.top) * (view.height / rect.height)) * resolutionMultiplier,
         };
     }
-
-    forceTransformUpdate(): void
-    {
-        // TODO
-        // legitimately not sure of way to do what this is asking in phaser, just gonna hope this is never really needed for now
-        // this.game.
-        // if (this.phaser._lastObjectRendered) {
-        //     // ensure all transforms are updated so that positioning is correct for bounds
-        //     const displayObject = this.phaser._lastObjectRendered;
-        //     const cacheParent = displayObject.enableTempParent();
-        //     displayObject.updateTransform();
-        //     displayObject.disableTempParent(cacheParent);
-        // }
-    }
 }

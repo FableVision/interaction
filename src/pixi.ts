@@ -120,16 +120,4 @@ export class PixiHandler implements IRendererPlugin
             y: ((y - rect.top) * (view.height / rect.height)) * resolutionMultiplier,
         };
     }
-
-    forceTransformUpdate(): void
-    {
-        if (this.pixi._lastObjectRendered)
-        {
-            // ensure all transforms are updated so that positioning is correct for bounds
-            const displayObject = this.pixi._lastObjectRendered;
-            const cacheParent = displayObject.enableTempParent();
-            displayObject.updateTransform();
-            displayObject.disableTempParent(cacheParent);
-        }
-    }
 }

@@ -115,7 +115,6 @@ export enum ControlStrategy
 export interface IRendererPlugin
 {
     mapClientPosToPoint(x: number, y: number): IPoint;
-    forceTransformUpdate(): void;
 }
 
 export interface InteractionManagerOpts
@@ -695,7 +694,6 @@ export class InteractionManager
         this.removeCurrentContext((this.current && list.includes(this.current)) ? this.current : undefined);
 
         this.currentContext = {items: list, parent: current.parent?.items||null};
-        this.renderer.forceTransformUpdate();
         const added = list.slice();
         for (let i = 0; i < list.length; ++i)
         {
