@@ -3,6 +3,21 @@ import { InteractionManager, InteractiveList } from '../InteractionManager';
 import { Keyboard, KeyConfig } from '../Keyboard';
 import { ComplexFocusContext } from './ComplexFocusContext';
 
+export interface KeyboardShortcutContextOpts
+{
+    /** List of items in the context. */
+    items: InteractiveList;
+    /** Keyboard shortcuts to select the corresponding entry in items. Null values don't have a shortcut. */
+    keys: (string[]|string|null)[];
+    /** Name of this context. If omitted, generates a random one. */
+    name?: string;
+    /**
+     * If hitting ESC should end the drag. Activating the interactive item will always end it.
+     * Defaults to true
+     */
+    escCancels?: boolean;
+}
+
 /**
  * An advanced context that automatically activates keyboard shortcuts to select specific
  * interactable items.
@@ -14,21 +29,21 @@ export class KeyboardShortcutContext implements ComplexFocusContext
     public keys: KeyConfig[];
     public name: string;
 
-    constructor(items: InteractiveList, keys: (string[]|string|null)[], name = String(Math.random()), escCancels = false)
+    constructor(opts: KeyboardShortcutContextOpts)
     {
-        this.items = items;
-        this.name = name;
+        this.items = opts.items;
+        this.name = opts.name || String(Math.random());
         this.deactivate = new DisposableGroup();
         this.keys = [];
-        for (let i = 0; i < keys.length; ++i)
+        for (let i = 0; i < opts.keys.length; ++i)
         {
-            if (!keys[i]) continue;
+            if (!opts.keys[i]) continue;
             this.keys.push({
-                keys: keys[i]!,
-                down: () => items[i].focus(),
+                keys: opts.keys[i]!,
+                down: () => this.items[i].focus(),
             });
         }
-        if (escCancels)
+        if (opts.escCancels !== false)
         {
             this.keys.push({keys: Keyboard.instance.ESC, up: () => InteractionManager.instance.popContext(this.name)});
         }

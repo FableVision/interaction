@@ -22,7 +22,7 @@ export interface KeyboardFreeDragOpts<T extends DragTarget>
     /** If drag should be ended if focus leaves the target. Defaults to false */
     cancelOnFocusLoss?: boolean;
     /**
-     * Orthoganal Movement speed while 'dragging'.
+     * Orthogonal Movement speed while 'dragging'.
      * This will be units/second unless moveTickTime is provided (and > 0), in which case it will be units/tick.
      */
     moveSpeed: number;
