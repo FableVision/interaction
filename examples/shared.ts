@@ -5,6 +5,9 @@ import { Sprite } from '@pixi/sprite';
 import { Texture } from '@pixi/core';
 import { Container } from '@pixi/display';
 
+export const WIDTH = 2160;
+export const HEIGHT = 1080;
+
 export class TestUI extends Container
 {
     public interact: PixiInteractive;

@@ -1,7 +1,7 @@
 import { Disposable, DisposableGroup, Tween } from '@fablevision/utils';
 import { Container } from '@pixi/display';
 import { DragStrategy, drag, InteractionManager, DragType } from '../dist';
-import {Test, TestUI} from './shared';
+import {HEIGHT, Test, TestUI, WIDTH} from './shared';
 
 const cleanup = new DisposableGroup();
 const dropAreaTest: Test = {
@@ -12,9 +12,10 @@ const dropAreaTest: Test = {
             new TestUI({x: 300, y: 300}, 0xaaffaa, {}),
             new TestUI({x: 300, y: 300}, 0xaaaaff, {}),
         ];
+        const left = WIDTH / 2 - (350 * 2.5) / 2;
         for (let i = 0; i < items.length; ++i)
         {
-            items[i].x = 400 + i * 350;
+            items[i].x = left + i * 350;
             items[i].y = 300;
             stage.addChild(items[i]);
         }
@@ -31,8 +32,8 @@ const dropAreaTest: Test = {
         controller.dragStarted.on((item, type) => {
             if (type == DragType.Keyboard)
             {
-                draggable.x = 500;
-                draggable.y = 550;
+                draggable.x = WIDTH / 2;
+                draggable.y = HEIGHT / 2;
             }
             dragStartPos.x = item.x;
             dragStartPos.y = item.y;
@@ -49,8 +50,8 @@ const dropAreaTest: Test = {
             Tween.get(item).to(dragStartPos, 0.25, 'quadInOut');
         });
 
-        draggable.x = 500;
-        draggable.y = 550;
+        draggable.x = WIDTH / 2;
+        draggable.y = HEIGHT / 2;
         stage.addChild(draggable);
         InteractionManager.instance.activateContext({items: [draggable.interact], name: 'base'});
     },

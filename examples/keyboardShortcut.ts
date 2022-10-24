@@ -1,7 +1,7 @@
 import { Disposable, DisposableGroup } from '@fablevision/utils';
 import { Container } from '@pixi/display';
 import { InteractionManager, complex, Keyboard } from '../dist';
-import {Test, TestUI} from './shared';
+import {Test, TestUI, WIDTH} from './shared';
 
 const cleanup = new DisposableGroup();
 const shortcutTest: Test = {
@@ -12,9 +12,10 @@ const shortcutTest: Test = {
             new TestUI('Item 2 (Up)', 0xffffff, {}),
             new TestUI('Item 3 (Right)', 0xffffff, {}),
         ];
+        const left = (WIDTH - (200 * 3)) / 2;
         for (let i = 0; i < items.length; ++i)
         {
-            items[i].x = 400 + i * 200;
+            items[i].x = left + i * 200;
             items[i].y = 300;
             stage.addChild(items[i]);
             items[i].interact.onActivate.add(() => console.log('Activated item ' + i));
@@ -30,7 +31,7 @@ const shortcutTest: Test = {
             }),
         });
 
-        group.x = 600;
+        group.x = left + 200;
         group.y = 300;
         stage.addChildAt(group, 0);
         InteractionManager.instance.activateContext({items: [group.interact], name: 'base'});

@@ -1,12 +1,14 @@
 import { Disposable, DisposableGroup } from '@fablevision/utils';
 import { Container } from '@pixi/display';
 import { InteractionManager, complex, Keyboard, Interactive, StandaloneGroup } from '../dist';
-import {Test, TestUI} from './shared';
+import {HEIGHT, Test, TestUI, WIDTH} from './shared';
 
 const cleanup = new DisposableGroup();
 const gridTest: Test = {
     setup(stage: Container)
     {
+        const top = (HEIGHT - (55 * 5)) / 2;
+        const left = (WIDTH - (55 * 5)) / 2;
         const grid: (Interactive|null)[][] = [];
         const childrenToRemove: TestUI[] = [];
         for (let x = 0; x < 5; ++x)
@@ -22,8 +24,8 @@ const gridTest: Test = {
                 const box = new TestUI({x: 50, y: 50}, Math.round(Math.random() * 0xffffff), {});
                 column.push(box.interact);
                 stage.addChild(box);
-                box.x = 300 + 55 * x;
-                box.y = 300 + 55 * y;
+                box.x = left + 55 * x;
+                box.y = top + 55 * y;
                 box.interact.onActivate.add(() => console.log('activated at ', x, y));
                 childrenToRemove.push(box);
             }

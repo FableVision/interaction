@@ -4,14 +4,14 @@ import { Application } from '@pixi/app';
 import { globalTimer } from '@fablevision/utils';
 import { Keyboard, InteractionManager, ControlStrategy } from '../dist';
 import { PixiHandler } from '../dist/pixi';
-import { Test, TestUI } from './shared';
+import { HEIGHT, Test, TestUI, WIDTH } from './shared';
 import dragTest from './drag';
 import shortcutTest from './keyboardShortcut';
 import dropTest from './dropArea';
 import gridTest from './grid';
 
-const layoutWidth = 2160;
-const layoutHeight = 1080;
+const layoutWidth = WIDTH;
+const layoutHeight = HEIGHT;
 const safeWidth = 1080 / 3 * 4;
 const safeHeight = 1080;
 const app = new Application({
@@ -19,7 +19,7 @@ const app = new Application({
     height: layoutHeight,
     powerPreference: 'high-performance',
     autoStart: true,
-    transparent: true,
+    backgroundAlpha: 1,
     backgroundColor: 0xeeeeee,
 });
 document.getElementById('content')!.appendChild(app.view);
@@ -48,7 +48,7 @@ window.addEventListener('resize', resize);
 resize();
 
 const nextButton = new TestUI('Next Test', 0xdddddd, {});
-nextButton.position.set(100);
+nextButton.position.set((layoutWidth - safeWidth) / 2 + 100, 100);
 nextButton.interact.onActivate.add(() => next());
 app.stage.addChild(nextButton);
 focus.setBaseline([], [nextButton.interact]);

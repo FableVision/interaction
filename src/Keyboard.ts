@@ -58,8 +58,6 @@ export function fromKey(key: string|string[], down?: null|((e: KeyboardJS.KeyEve
         };
     }
 
-    console.log('KEYS', key, preventRepeat);
-
     KeyboardJS.bind(key, down as any, up as any, preventRepeat);
     return new Disposable(() =>
     {
