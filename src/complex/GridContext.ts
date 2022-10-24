@@ -46,6 +46,9 @@ export class GridContext implements ComplexFocusContext
     public items: InteractiveList;
     public deactivate: DisposableGroup;
     public name: string;
+    /** Grids are complex enough that we should not allow baseline items, but this can be overridden. */
+    public allowBaseline: boolean;
+    protected allItems: InteractiveList;
     protected keyConfigs: KeyConfig[];
     protected grid: (Interactive|null)[][];
     protected gridX: number;
@@ -54,9 +57,12 @@ export class GridContext implements ComplexFocusContext
     protected gridHeight: number;
     protected skipGaps: boolean;
     protected loop: boolean;
+    /** Tracks which focus context is active so that we can replace/add as needed */
+    protected activeContext: 'lines'|'singleLine'|'all';
 
     constructor(opts: GridContextOpts)
     {
+        this.allowBaseline = false;
         this.skipGaps = !!opts.arrowSkipsGaps;
         this.loop = !!opts.arrowLoopsAtEdges;
         this.grid = opts.grid;
@@ -64,6 +70,26 @@ export class GridContext implements ComplexFocusContext
         this.gridWidth = this.grid.length;
         this.gridHeight = this.grid[0].length;
         this.items = [];
+        this.allItems = [];
+        this.activeContext = 'lines';
+        // get all the items for the arrow key selection
+        for (let y = 0; y < this.gridHeight; ++y)
+        {
+            for (let x = 0; x < this.gridWidth; ++x)
+            {
+                const item = this.grid[x][y];
+                if (item)
+                {
+                    this.allItems.push(item);
+                    // keep gridX/gridY up to date even when focus changes via tab
+                    item.onFocus.add(() =>
+                    {
+                        this.gridX = x;
+                        this.gridY = y;
+                    });
+                }
+            }
+        }
         switch (opts.tabSelection)
         {
             case 'column':
@@ -80,6 +106,15 @@ export class GridContext implements ComplexFocusContext
                     }
                     if (!column.length) continue;
                     const columnGroup = new StandaloneGroup({childContext: column});
+                    // change to first item in column if arrow keys are used
+                    columnGroup.onFocus.add(() => {
+                        this.gridX = x;
+                        this.gridY = 0;
+                        this.activeContext = 'lines';
+                    });
+                    columnGroup.onActivate.add(() => {
+                        this.activeContext = 'singleLine';
+                    });
                     this.items.push(columnGroup);
                 }
                 break;
@@ -96,21 +131,22 @@ export class GridContext implements ComplexFocusContext
                         }
                     }
                     const rowGroup = new StandaloneGroup({childContext: row});
+                    // change to first item in row if arrow keys are used
+                    rowGroup.onFocus.add(() => {
+                        this.gridX = 0;
+                        this.gridY = y;
+                        this.activeContext = 'lines';
+                    });
+                    rowGroup.onActivate.add(() => {
+                        this.activeContext = 'singleLine';
+                    });
                     this.items.push(rowGroup);
                 }
                 break;
             case 'single':
-                for (let x = 0; x < this.gridWidth; ++x)
-                {
-                    for (let y = 0; y < this.gridHeight; ++y)
-                    {
-                        const item = this.grid[x][y];
-                        if (item)
-                        {
-                            this.items.push(item);
-                        }
-                    }
-                }
+                // just use the all items context always
+                this.items = this.allItems;
+                this.activeContext = 'all';
                 break;
         }
         this.name = opts.name || String(Math.random());
@@ -176,7 +212,6 @@ export class GridContext implements ComplexFocusContext
 
     protected move(x: number, y: number): void
     {
-        // TODO: handle setting gridX starting position, both in general, from individual row/column groups, and from tabbing through individuals
         let nextX = this.gridX + x;
         let nextY = this.gridY + y;
         while (!this.grid[nextX] || !this.grid[nextX][nextY])
@@ -204,9 +239,30 @@ export class GridContext implements ComplexFocusContext
         }
         if (this.grid[nextX] && this.grid[nextX][nextY])
         {
-            this.gridX = nextX;
-            this.gridY = nextY;
+            this.useArrowContext();
             this.grid[nextX][nextY]!.focus();
         }
+    }
+
+    /**
+     * Activates the square by square context used for arrow keys.
+     */
+    protected useArrowContext(): void
+    {
+        if (this.activeContext === 'all') return;
+
+        // if we are in a single line group, pop that off back to the rows/column grid selection
+        if (this.activeContext == 'singleLine')
+        {
+            InteractionManager.instance.popContext();
+        }
+        // now replace the rows/column grid selection with the full grid
+        InteractionManager.instance.replaceCurrentContext({
+            items: this.allItems,
+            allowBaseline: this.allowBaseline,
+            // replace current context, instead of by name
+            name: '',
+        });
+        this.activeContext = 'all';
     }
 }
