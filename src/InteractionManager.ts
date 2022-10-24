@@ -1,4 +1,4 @@
-import { Disposable, DisposableGroup, math } from '@fablevision/utils';
+import { Disposable, DisposableGroup, IDisposable, math } from '@fablevision/utils';
 import { Keyboard, KeyEvent } from './Keyboard';
 import { Interactive, IPoint } from './Interactive';
 import { DWELL, GROUP_CLASS, INTERACTIVE_CLASS, KEYBOARD, MOUSE, TOUCH } from './internal';
@@ -585,11 +585,16 @@ export class InteractionManager
                 return;
             }
             const target = !keepNamed ? index : index + 1;
+            const toDispose: IDisposable[] = [];
             for (let i = target; i < this.contexts.length; ++i)
             {
-                this.contexts[i].cleanup.dispose();
+                toDispose.push(this.contexts[i].cleanup);
             }
             this.contexts.length = target;
+            for (let i = 0; i < toDispose.length; ++i)
+            {
+                toDispose[i].dispose();
+            }
         }
         else
         {
