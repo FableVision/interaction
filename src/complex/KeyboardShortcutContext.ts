@@ -41,6 +41,7 @@ export class KeyboardShortcutContext implements ComplexFocusContext
             this.keys.push({
                 keys: opts.keys[i]!,
                 down: () => this.items[i].focus(),
+                preventDefault: true,
             });
         }
         if (opts.escCancels !== false)

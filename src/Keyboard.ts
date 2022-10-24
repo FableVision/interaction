@@ -12,6 +12,8 @@ interface InternalKeyConfig
     down?: (e: KeyboardJS.KeyEvent) => void;
     /** Listener for when key is released. */
     up?: (e: KeyboardJS.KeyEvent) => void;
+    /** If down should not be called on repeats. Defaults to false. */
+    preventDefault?: boolean;
 }
 
 // Thanks, https://stackoverflow.com/a/49725198
@@ -28,11 +30,37 @@ type RequireAtLeastOne<T, Keys extends keyof T = keyof T> =
  */
 export type KeyConfig = RequireAtLeastOne<InternalKeyConfig, 'down'|'up'>;
 
-export function fromKey(key: string|string[], down?: null|((e: KeyboardJS.KeyEvent)=>void), up?: (e: KeyboardJS.KeyEvent)=>void): Disposable
+/**
+ * Attaches a keyboard listener to the current keyboard context.
+ * @param key Key or key combo to trigger from.
+ * @param down Callback for when key is pressed or repeated (held down).
+ * @param up Callback for when key is released.
+ * @param preventRepeat If down should not be called on repeats. Defaults to false.
+ */
+export function fromKey(key: string|string[], down?: null|((e: KeyboardJS.KeyEvent)=>void), up?: (e: KeyboardJS.KeyEvent)=>void, preventRepeat?: boolean): Disposable
 {
     const context = KeyboardJS.getContext();
 
-    KeyboardJS.bind(key, down as any, up as any);
+    // preventRepeatByDefault doesn't seem to be working in KeyboardJS, so do it manually, I guess?
+    if (preventRepeat && down)
+    {
+        let pressed = false;
+        const originalDown = down;
+        down = (e) => {
+            if (pressed) return;
+            pressed = true;
+            originalDown(e);
+        };
+        const originalUp = up;
+        up = (e) => {
+            pressed = false;
+            if (originalUp) originalUp(e);
+        };
+    }
+
+    console.log('KEYS', key, preventRepeat);
+
+    KeyboardJS.bind(key, down as any, up as any, preventRepeat);
     return new Disposable(() =>
     {
         const prev = KeyboardJS.getContext();
@@ -94,18 +122,19 @@ export class Keyboard
      * @param key Name(s) of keys to listen to.
      * @param down Listener for when key is pressed down or repeated.
      * @param up Listener for when key is released.
+     * @param preventRepeat If down should not be called on repeats. Defaults to false.
      * @return A Disposable to remove this listener.
      */
-    public add(key: string | string[], down?: (e?: KeyboardJS.KeyEvent) => void, up?: (e?: KeyboardJS.KeyEvent) => void): Disposable;
-    public add(key: string | string[] | KeyConfig, down?: (e?: KeyboardJS.KeyEvent) => void, up?: (e?: KeyboardJS.KeyEvent) => void): Disposable
+    public add(key: string | string[], down?: (e?: KeyboardJS.KeyEvent) => void, up?: (e?: KeyboardJS.KeyEvent) => void, preventDefault?: boolean): Disposable;
+    public add(key: string | string[] | KeyConfig, down?: (e?: KeyboardJS.KeyEvent) => void, up?: (e?: KeyboardJS.KeyEvent) => void, preventDefault?: boolean): Disposable
     {
         if (typeof key === 'string' || Array.isArray(key))
         {
-            return fromKey(key, down || null, up);
+            return fromKey(key, down || null, up, preventDefault);
         }
         else
         {
-            return fromKey(key.keys, key.down, key.up);
+            return fromKey(key.keys, key.down, key.up, key.preventDefault);
         }
     }
 
@@ -122,7 +151,7 @@ export class Keyboard
         {
             for (const config of configs)
             {
-                rtn.add(fromKey(config.keys, config.down, config.up));
+                rtn.add(fromKey(config.keys, config.down, config.up, config.preventDefault));
             }
         });
         return rtn;

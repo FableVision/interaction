@@ -155,22 +155,26 @@ export class GridContext implements ComplexFocusContext
             // left
             {
                 keys: [],
-                up: () => this.move(-1, 0),
+                down: () => this.move(-1, 0),
+                preventDefault: true,
             },
             // right
             {
                 keys: [],
-                up: () => this.move(1, 0),
+                down: () => this.move(1, 0),
+                preventDefault: true,
             },
             // up
             {
                 keys: [],
-                up: () => this.move(0, -1),
+                down: () => this.move(0, -1),
+                preventDefault: true,
             },
             // down
             {
                 keys: [],
-                up: () => this.move(0, 1),
+                down: () => this.move(0, 1),
+                preventDefault: true,
             },
         ];
         const keyboard = Keyboard.instance;

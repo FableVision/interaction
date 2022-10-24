@@ -55,7 +55,7 @@ focus.setBaseline([], [nextButton.interact]);
 
 // ************************
 // now, the actual test begins
-const tests = [/*dragTest, shortcutTest, dropTest,*/ gridTest];
+const tests = [dragTest, shortcutTest, dropTest, gridTest];
 let currentIndex = -1;
 let currentTest = null as Test|null;
 
