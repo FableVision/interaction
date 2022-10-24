@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = (env, argv) => {
     const dev = argv.mode === 'development' || (env && env.WEBPACK_SERVE);
     return {
-        entry: './test/index.ts',
+        entry: './examples/index.ts',
         output: {
             filename: 'bundle.js',
             path: path.resolve(__dirname, 'deploy'),
@@ -16,7 +16,7 @@ module.exports = (env, argv) => {
         },
         plugins: [
             new HtmlWebpackPlugin({
-                template: './test/index.html',
+                template: './examples/index.html',
                 inject: 'body',
             }),
         ],

@@ -19,7 +19,7 @@
     ],
     // having to exclude here is silly, tsc shouldn't even be looking in here
     "exclude": [
-        "test/*",
+        "examples/*",
         "dist/*",
     ]
 }
