@@ -82,6 +82,7 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
             this.dragStarted.emit(target, type);
         };
         const end = (target: T) => {
+            this.currentDrag = DragType.None;
             // find the drop area we dropped the item on
             for (let i = 0; i < this.dropContext.items.length; ++i)
             {
