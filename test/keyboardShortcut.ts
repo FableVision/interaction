@@ -22,7 +22,12 @@ const shortcutTest: Test = {
 
         const k = Keyboard.instance;
         const group = new TestUI({x: 600, y: 100}, 0xffffff, {
-            childContext: new complex.KeyboardShortcutContext(items.map(item => item.interact), [k.LEFT, k.UP, k.RIGHT], 'test', true),
+            childContext: new complex.KeyboardShortcutContext({
+                items: items.map(item => item.interact),
+                keys: [k.LEFT, k.UP, k.RIGHT],
+                name: 'test',
+                escCancels: true
+            }),
         });
 
         group.x = 600;

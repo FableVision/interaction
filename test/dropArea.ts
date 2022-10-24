@@ -25,7 +25,7 @@ const dropAreaTest: Test = {
             interactive: draggable.interact,
             dropAreas: items.map(i => i.interact),
         });
-        cleanup.add(controller, draggable);
+        cleanup.add(controller, draggable, new Disposable(() => stage.removeChild(draggable, ...items)));
 
         const dragStartPos = {x: 0, y: 0};
         controller.dragStarted.on((item, type) => {

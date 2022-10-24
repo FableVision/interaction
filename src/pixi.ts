@@ -4,13 +4,9 @@ import { AbstractRenderer } from '@pixi/core';
 import { Interactive, InteractiveOpts, IPoint, } from './Interactive';
 import { IRendererPlugin } from './InteractionManager';
 import { globalTimer, IDisposable } from '@fablevision/utils';
+import { areRectsDifferent, copyRectTo } from './internal';
 
 const helperRect = new Rectangle();
-
-function areRectsDifferent(a: Rectangle, b: Rectangle)
-{
-    return a.x != b.x || a.y != b.y || a.width != b.width || a.height != b.height;
-}
 
 /**
  * PixiInteractive will attempt to keep the accessibility position synced with the pixi DisplayObject
@@ -65,7 +61,7 @@ export class PixiInteractive extends Interactive
 
             if (areRectsDifferent(helperRect, this.lastRect))
             {
-                this.lastRect.copyFrom(helperRect);
+                copyRectTo(helperRect, this.lastRect);
 
                 div.style.left = `${helperRect.x}px`;
                 div.style.top = `${helperRect.y}px`;
@@ -78,7 +74,7 @@ export class PixiInteractive extends Interactive
             const bounds = this.pixiDisplay.getBounds(false, helperRect);
             if (areRectsDifferent(bounds, this.lastRect))
             {
-                this.lastRect.copyFrom(bounds);
+                copyRectTo(bounds, this.lastRect);
 
                 div.style.left = `${bounds.x}px`;
                 div.style.top = `${bounds.y}px`;
@@ -92,6 +88,8 @@ export class PixiInteractive extends Interactive
     {
         return this.lastRect.contains(globalX, globalY);
     }
+
+    public get bounds() { return this.lastRect; }
 
     public dispose()
     {

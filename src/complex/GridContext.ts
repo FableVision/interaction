@@ -2,6 +2,7 @@ import { DisposableGroup } from '@fablevision/utils';
 import { InteractionManager, InteractiveList } from '../InteractionManager';
 import { Interactive } from '../Interactive';
 import { Keyboard, KeyConfig } from '../Keyboard';
+import { StandaloneGroup } from '../StandaloneGroup';
 import { ComplexFocusContext } from './ComplexFocusContext';
 
 export interface GridContextOpts
@@ -28,8 +29,10 @@ export interface GridContextOpts
      * Defaults to true
      */
     escCancels?: boolean;
-    /** If gaps should be jumped over when using arrow keys (or equivalent). */
+    /** If gaps should be jumped over when using arrow keys (or equivalent). Defaults to false. */
     arrowSkipsGaps?: boolean;
+    /** If arrow keys should loop around in the grid instead of stop short. Defaults to false. */
+    arrowLoopsAtEdges?: boolean;
     /** Name of this context. If omitted, generates a random one. */
     name?: string;
 }
@@ -47,19 +50,67 @@ export class GridContext implements ComplexFocusContext
     protected grid: (Interactive|null)[][];
     protected gridX: number;
     protected gridY: number;
+    protected gridWidth: number;
+    protected gridHeight: number;
+    protected skipGaps: boolean;
+    protected loop: boolean;
 
     constructor(opts: GridContextOpts)
     {
+        this.skipGaps = !!opts.arrowSkipsGaps;
+        this.loop = !!opts.arrowLoopsAtEdges;
         this.grid = opts.grid;
         this.gridX = this.gridY = 0;
+        this.gridWidth = this.grid.length;
+        this.gridHeight = this.grid[0].length;
         this.items = [];
         switch (opts.tabSelection)
         {
             case 'column':
+                for (let x = 0; x < this.gridWidth; ++x)
+                {
+                    const column: Interactive[] = [];
+                    for (let y = 0; y < this.gridHeight; ++y)
+                    {
+                        const item = this.grid[x][y];
+                        if (item)
+                        {
+                            column.push(item);
+                        }
+                    }
+                    if (!column.length) continue;
+                    const columnGroup = new StandaloneGroup({childContext: column});
+                    this.items.push(columnGroup);
+                }
                 break;
             case 'row':
+                for (let y = 0; y < this.gridWidth; ++y)
+                {
+                    const row: Interactive[] = [];
+                    for (let x = 0; x < this.gridHeight; ++x)
+                    {
+                        const item = this.grid[x][y];
+                        if (item)
+                        {
+                            row.push(item);
+                        }
+                    }
+                    const rowGroup = new StandaloneGroup({childContext: row});
+                    this.items.push(rowGroup);
+                }
                 break;
             case 'single':
+                for (let x = 0; x < this.gridWidth; ++x)
+                {
+                    for (let y = 0; y < this.gridHeight; ++y)
+                    {
+                        const item = this.grid[x][y];
+                        if (item)
+                        {
+                            this.items.push(item);
+                        }
+                    }
+                }
                 break;
         }
         this.name = opts.name || String(Math.random());
@@ -125,6 +176,37 @@ export class GridContext implements ComplexFocusContext
 
     protected move(x: number, y: number): void
     {
-        // TODO:
+        // TODO: handle setting gridX starting position, both in general, from individual row/column groups, and from tabbing through individuals
+        let nextX = this.gridX + x;
+        let nextY = this.gridY + y;
+        while (!this.grid[nextX] || !this.grid[nextX][nextY])
+        {
+            if (nextX < 0 || nextX >= this.gridWidth || nextY < 0 || nextY >= this.gridHeight)
+            {
+                if (!this.loop)
+                {
+                    break;
+                }
+                if (nextX < 0) nextX = this.gridWidth - 1;
+                else if (nextX >= this.gridWidth) nextX = 0;
+                if (nextY < 0) nextY = this.gridHeight - 1;
+                else if (nextY >= this.gridHeight) nextY = 0;
+            }
+            else if (this.skipGaps)
+            {
+                nextX += x;
+                nextY += y;
+            }
+            else
+            {
+                break;
+            }
+        }
+        if (this.grid[nextX] && this.grid[nextX][nextY])
+        {
+            this.gridX = nextX;
+            this.gridY = nextY;
+            this.grid[nextX][nextY]!.focus();
+        }
     }
 }

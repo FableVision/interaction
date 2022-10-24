@@ -1,7 +1,7 @@
 import { IDisposable, Event, DoubleEvent } from '@fablevision/utils';
 import { ComplexFocusContext } from './complex';
 import type { InteractionManager, InteractiveList } from './InteractionManager';
-import { GROUP_CLASS, KEYBOARD, MOUSE, TOUCH } from './internal';
+import { GROUP_CLASS, IRect, KEYBOARD, MOUSE, TOUCH } from './internal';
 
 const SUPPORTS_POINTERS = !!window.PointerEvent;
 const SUPPORTS_TOUCH = !!window.TouchEvent && 'ontouchstart' in window;
@@ -150,6 +150,11 @@ class StickyDragIdChecker
  * interactive item.
  */
 const idTracker = new StickyDragIdChecker();
+
+/**
+ * Rectangle for handing out in 'bounds' when not overridden.
+ */
+const EMPTY_RECT = {x:0, y:0, width:0, height:0};
 
 export class Interactive implements IDisposable
 {
@@ -337,6 +342,14 @@ export class Interactive implements IDisposable
     public hitTest(globalX: number, globalY: number): boolean
     {
         return false;
+    }
+
+    /**
+     * Global boundaries of the object. Must be overridden.
+     */
+    public get bounds(): IRect
+    {
+        return EMPTY_RECT;
     }
 
     public dispose(): void

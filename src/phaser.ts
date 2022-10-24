@@ -2,13 +2,9 @@ import 'phaser';
 import { Interactive, InteractiveOpts, IPoint, } from './Interactive';
 import { IRendererPlugin } from './InteractionManager';
 import { globalTimer, IDisposable } from '@fablevision/utils';
+import { areRectsDifferent, copyRectTo } from './internal';
 
 const helperRect = new Phaser.Geom.Rectangle();
-
-function areRectsDifferent(a: Phaser.Geom.Rectangle, b: Phaser.Geom.Rectangle)
-{
-    return a.x != b.x || a.y != b.y || a.width != b.width || a.height != b.height;
-}
 
 /**
  * PhaserInteractive will attempt to keep the accessibility position synced with the pixi DisplayObject
@@ -62,7 +58,7 @@ export class PhaserInteractive extends Interactive
 
             if (areRectsDifferent(helperRect, this.lastRect))
             {
-                Phaser.Geom.Rectangle.CopyFrom(helperRect, this.lastRect);
+                copyRectTo(helperRect, this.lastRect);
 
                 div.style.left = `${helperRect.x}px`;
                 div.style.top = `${helperRect.y}px`;
@@ -76,7 +72,7 @@ export class PhaserInteractive extends Interactive
 
             if (areRectsDifferent(helperRect, this.lastRect))
             {
-                Phaser.Geom.Rectangle.CopyFrom(bounds, this.lastRect);
+                copyRectTo(bounds, this.lastRect);
 
                 div.style.left = `${bounds.x}px`;
                 div.style.top = `${bounds.y}px`;
@@ -90,6 +86,8 @@ export class PhaserInteractive extends Interactive
     {
         return this.lastRect.contains(globalX, globalY);
     }
+
+    public get bounds() { return this.lastRect; }
 
     public dispose()
     {
