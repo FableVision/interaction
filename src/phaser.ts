@@ -24,17 +24,15 @@ export class PhaserInteractive extends Interactive
     /** The sprite object this represents */
     private objectDisplay: PhaserObject;
     private transformMatrix: Matrix;
-    private game: Phaser.Game;
     private update: IDisposable;
     private lastRect: Phaser.Geom.Rectangle;
 
-    constructor(opts: InteractiveOpts & { phaser: PhaserObject, game: Phaser.Game })
+    constructor(opts: InteractiveOpts & { phaser: PhaserObject })
     {
         super(opts);
 
         this.transformMatrix = new Phaser.GameObjects.Components.TransformMatrix();
         this.objectDisplay = opts.phaser;
-        this.game = opts.game;
         this.lastRect = new Phaser.Geom.Rectangle();
         this.update = globalTimer.add(() =>
         {
@@ -107,12 +105,10 @@ export class PhaserInteractive extends Interactive
 
 export class PhaserHandler implements IRendererPlugin
 {
-    private phaser: typeof Phaser.Renderer;
     private game: Phaser.Game;
 
-    constructor(phaser: typeof Phaser.Renderer, game: Phaser.Game)
+    constructor(game: Phaser.Game)
     {
-        this.phaser = phaser;
         this.game = game;
     }
 
