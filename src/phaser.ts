@@ -6,6 +6,15 @@ import { areRectsDifferent, copyRectTo } from './internal';
 
 const helperRect = new Phaser.Geom.Rectangle();
 
+type Matrix = Phaser.GameObjects.Components.TransformMatrix;
+
+export interface PhaserObject
+{
+    visible: boolean;
+    getWorldTransformMatrix(tempMatrix?: Matrix, parentMatrix?: Matrix): Matrix;
+    getBounds(rect: Phaser.Geom.Rectangle): Phaser.Geom.Rectangle;
+}
+
 /**
  * PhaserInteractive will attempt to keep the accessibility position synced with the pixi DisplayObject
  * if globalTimer is running/ticked. Otherwise, you'll need to call updatePosition() manually.
@@ -13,13 +22,13 @@ const helperRect = new Phaser.Geom.Rectangle();
 export class PhaserInteractive extends Interactive
 {
     /** The sprite object this represents */
-    private objectDisplay: Phaser.GameObjects.Sprite;
-    private transformMatrix: Phaser.GameObjects.Components.TransformMatrix;
+    private objectDisplay: PhaserObject;
+    private transformMatrix: Matrix;
     private game: Phaser.Game;
     private update: IDisposable;
     private lastRect: Phaser.Geom.Rectangle;
 
-    constructor(opts: InteractiveOpts & { phaser: Phaser.GameObjects.Sprite, game: Phaser.Game })
+    constructor(opts: InteractiveOpts & { phaser: PhaserObject, game: Phaser.Game })
     {
         super(opts);
 
