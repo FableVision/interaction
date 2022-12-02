@@ -406,7 +406,7 @@ export class Interactive implements IDisposable
     {
         if (!this.manager!.focusEnabled) return;
 
-        if (ev instanceof TouchEvent || (ev instanceof PointerEvent && ev.pointerType == 'touch'))
+        if (isTouch(ev))
             NEXT_FOCUS_SOURCE = TOUCH;
         else
             NEXT_FOCUS_SOURCE = MOUSE;
@@ -421,7 +421,7 @@ export class Interactive implements IDisposable
     {
         if (!this.manager!.focusEnabled) return;
 
-        if (ev instanceof TouchEvent || (ev instanceof PointerEvent && ev.pointerType == 'touch'))
+        if (isTouch(ev))
             NEXT_BLUR_SOURCE = TOUCH;
         else
             NEXT_BLUR_SOURCE = MOUSE;
@@ -438,7 +438,7 @@ export class Interactive implements IDisposable
         // console.log('pointer down', ev);
         if (this.activePointerId >= 0) return;
 
-        if (ev instanceof TouchEvent || (ev instanceof PointerEvent && ev.pointerType == 'touch'))
+        if (isTouch(ev))
             NEXT_FOCUS_SOURCE = TOUCH;
         else
             NEXT_FOCUS_SOURCE = MOUSE;
