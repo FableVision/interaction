@@ -248,9 +248,9 @@ export class InteractionManager
      */
     public removeCSS(): void
     {
-        while (this.styleElement.children.length)
+        while (this.styleElement.childNodes.length)
         {
-            this.styleElement.removeChild(this.styleElement.children[0]);
+            this.styleElement.removeChild(this.styleElement.childNodes[0]);
         }
     }
 
