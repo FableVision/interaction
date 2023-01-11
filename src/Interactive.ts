@@ -95,8 +95,8 @@ export interface IPoint
  * Because we are relying on browser focus events, using a flag that we then consume is the easiest way to
  * determine if the focus event happened from a mouseover.
  */
-let NEXT_FOCUS_SOURCE = KEYBOARD;
-let NEXT_BLUR_SOURCE = KEYBOARD;
+let NEXT_FOCUS_SOURCE: typeof TOUCH | typeof MOUSE | typeof KEYBOARD = KEYBOARD;
+let NEXT_BLUR_SOURCE: typeof TOUCH | typeof MOUSE | typeof KEYBOARD = KEYBOARD;
 
 /**
  * Touch end events apply focus to elements after the event is handled, and that messes with our focus listeners.
@@ -278,6 +278,7 @@ export class Interactive implements IDisposable
                 // absolutely do not emit the focus event
                 return;
             }
+            this.focusSource = NEXT_FOCUS_SOURCE;
             const fromMouse = NEXT_FOCUS_SOURCE != KEYBOARD;
             NEXT_FOCUS_SOURCE = KEYBOARD;
             this.onFocus.emit(fromMouse);
