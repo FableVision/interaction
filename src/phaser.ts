@@ -53,7 +53,7 @@ export class PhaserInteractive extends Interactive
     public updatePosition(): void
     {
         const div = this.htmlElement;
-        const hitArea = (this.objectDisplay as any).hitArea;
+        const hitArea = (this.objectDisplay as any).input.hitArea;
         if (hitArea)
         {
             this.objectDisplay.getWorldTransformMatrix(this.transformMatrix);
