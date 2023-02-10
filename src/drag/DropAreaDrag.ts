@@ -31,16 +31,22 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
     public dragFailed: Event<T>;
     protected dropContext: ComplexFocusContext;
     protected currentDrag: DragType;
+    protected includeTarget: boolean;
+    protected target: T;
+    protected interactive: Interactive;
+    protected dropAreaCleanup: DisposableGroup;
 
     constructor(opts: DropAreaDragOpts<T>)
     {
-        const includeTarget = opts.includeTarget !== false;
+        this.target = opts.target;
+        this.interactive = opts.interactive;
+        this.includeTarget = opts.includeTarget !== false;
         this.currentDrag = DragType.None;
         if (Array.isArray(opts.dropAreas))
         {
             const deactivate = new DisposableGroup();
             this.dropContext = {
-                items: (includeTarget && !opts.dropAreas.includes(opts.interactive)) ? opts.dropAreas.concat(opts.interactive) : opts.dropAreas,
+                items: (this.includeTarget && !opts.dropAreas.includes(this.interactive)) ? opts.dropAreas.concat(this.interactive) : opts.dropAreas,
                 activate: () =>
                 {
                     deactivate.add(Keyboard.instance.addQuickContext({
@@ -49,7 +55,8 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
                     }));
                 },
                 deactivate,
-                name: 'dragDrop',
+                // use a random name, in case there are multiple draggables *and* drop areas need to be replaced
+                name: 'dragDrop' + Math.random(),
                 // treat as a modal, don't allow baseline
                 allowBaseline: false,
             };
@@ -57,23 +64,24 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
         else
         {
             this.dropContext = opts.dropAreas;
-            if (includeTarget && !this.dropContext.items.includes(opts.interactive))
+            if (this.includeTarget && !this.dropContext.items.includes(this.interactive))
             {
-                this.dropContext = Object.assign({}, this.dropContext, {items: this.dropContext.items.concat(opts.interactive)});
+                this.dropContext = Object.assign({}, this.dropContext, {items: this.dropContext.items.concat(this.interactive)});
             }
         }
+        this.dropAreaCleanup = new DisposableGroup();
         for (let i = 0; i < this.dropContext.items.length; ++i)
         {
-            if (this.dropContext.items[i] === opts.interactive) continue;
-            this.dropContext.items[i].onActivate.on(() => {
+            if (this.dropContext.items[i] === this.interactive) continue;
+            this.dropAreaCleanup.add(this.dropContext.items[i].onActivate.on(() => {
                 if (this.currentDrag)
                 {
                     this.cancel();
-                    this.dragComplete.emit(opts.target, i);
+                    this.dragComplete.emit(this.target, i);
                 }
-            });
+            }));
         }
-        this.pointer = new StandardDrag({target: opts.target, interactive: opts.interactive});
+        this.pointer = new StandardDrag({target: this.target, interactive: this.interactive});
         this.dragStarted = new DoubleEvent();
         this.dragComplete = new DoubleEvent();
         this.dragFailed = new Event();
@@ -98,7 +106,7 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
         };
         this.pointer.dragStarted.add(start);
         this.pointer.dragComplete.add(end);
-        opts.interactive.onActivate.add((position) => {
+        this.interactive.onActivate.add((position) => {
             // mouse activate shouldn't happen, because the target should be draggable.
             if (position) return;
 
@@ -110,7 +118,7 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
             }
             this.currentDrag = DragType.Keyboard;
             InteractionManager.instance.activateContext(this.dropContext);
-            this.dragStarted.emit(opts.target, this.currentDrag);
+            this.dragStarted.emit(this.target, this.currentDrag);
         });
     }
 
@@ -124,8 +132,44 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
         this.currentDrag = DragType.None;
     }
 
+    public replaceDropAreas(dropAreas: InteractiveList)
+    {
+        // cleanup listeners on previous drop areas
+        this.dropAreaCleanup.dispose();
+
+        // overwrite context item list
+        if (this.includeTarget && !dropAreas.includes(this.interactive))
+        {
+            this.dropContext.items = dropAreas.concat(this.interactive);
+        }
+        else
+        {
+            this.dropContext.items = dropAreas;
+        }
+        // assign new listeners
+        for (let i = 0; i < this.dropContext.items.length; ++i)
+        {
+            if (this.dropContext.items[i] === this.interactive) continue;
+            this.dropAreaCleanup.add(this.dropContext.items[i].onActivate.on(() =>
+            {
+                if (this.currentDrag)
+                {
+                    this.cancel();
+                    this.dragComplete.emit(this.target, i);
+                }
+            }));
+        }
+
+        // if our context was active, replace it
+        if (InteractionManager.instance.hasContext(this.dropContext.name))
+        {
+            InteractionManager.instance.replaceCurrentContext(this.dropContext);
+        }
+    }
+
     public dispose(): void
     {
+        this.dropAreaCleanup.dispose();
         this.pointer.dispose();
         this.dragStarted.dispose();
         this.dragComplete.dispose();
