@@ -89,16 +89,32 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
             this.currentDrag = type;
             this.dragStarted.emit(target, type);
         };
+        const {testDropAreas} = opts;
         const end = (target: T) => {
             this.currentDrag = DragType.None;
-            // find the drop area we dropped the item on
-            for (let i = 0; i < this.dropContext.items.length; ++i)
+
+            if (testDropAreas)
             {
-                if (this.dropContext.items[i] === opts.interactive) continue;
-                if (this.dropContext.items[i].hitTest(target.x, target.y))
+                const result = testDropAreas(target);
+                if (result >= 0)
                 {
-                    this.dragComplete.emit(target, i);
+                    this.dragComplete.emit(target, result);
                     return;
+                }
+            }
+            else
+            {
+                // find the drop area we dropped the item on
+                for (let i = 0; i < this.dropContext.items.length; ++i)
+                {
+                    if (this.dropContext.items[i] === this.interactive) continue;
+                    // skip disabled or hidden items
+                    if (!this.dropContext.items[i].visible || !this.dropContext.items[i].enabled) continue;
+                    if (this.dropContext.items[i].hitTest(target.x, target.y))
+                    {
+                        this.dragComplete.emit(target, i);
+                        return;
+                    }
                 }
             }
             // if we got here, we missed
