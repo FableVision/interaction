@@ -521,9 +521,9 @@ export class InteractionManager
         const tempName = String(Math.random());
         let context = overrideContext || item.childContext!;
         let first = 0;
-        if (Array.isArray(context))
+        if (Array.isArray(context) || context.exitRule == GroupEndStrategy.Exit)
         {
-            const items = context.slice();
+            const items = Array.isArray(context) ? context.slice() : context.items.slice();
             let groupExit: Interactive[]|null = null;
             if (this.groupEnd == GroupEndStrategy.Exit)
             {
@@ -550,7 +550,16 @@ export class InteractionManager
                 items.unshift(groupExit[0]);
                 items.push(groupExit[1]);
             }
-            this.internalActivate({items: context, allowBaseline: false, name: tempName}, this.contexts[this.contexts.length - 1]);
+            let modifiedContext: FullFocusContext;
+            if (Array.isArray(context))
+            {
+                modifiedContext = { items: context, allowBaseline: false, name: tempName };
+            }
+            else
+            {
+                modifiedContext = Object.assign({}, context, {items});
+            }
+            this.internalActivate(modifiedContext, this.contexts[this.contexts.length - 1]);
             const newContext = this.contexts[this.contexts.length - 1];
             newContext.cleanup.add(Keyboard.instance.add(Keyboard.instance.ESC, () => this.popContext(tempName)));
             if (groupExit)
