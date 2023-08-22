@@ -553,7 +553,7 @@ export class InteractionManager
             let modifiedContext: FullFocusContext;
             if (Array.isArray(context))
             {
-                modifiedContext = { items: context, allowBaseline: false, name: tempName };
+                modifiedContext = { items, allowBaseline: false, name: tempName };
             }
             else
             {
