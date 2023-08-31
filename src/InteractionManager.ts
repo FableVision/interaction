@@ -521,11 +521,13 @@ export class InteractionManager
         const tempName = String(Math.random());
         let context = overrideContext || item.childContext!;
         let first = 0;
-        if (Array.isArray(context) || context.exitRule == GroupEndStrategy.Exit)
+        const setUpExit = Array.isArray(context) ? this.groupEnd == GroupEndStrategy.Exit : context.exitRule == GroupEndStrategy.Exit;
+        // if we need to set up exit, or handle simple array of items
+        if (setUpExit || Array.isArray(context))
         {
             const items = Array.isArray(context) ? context.slice() : context.items.slice();
             let groupExit: Interactive[]|null = null;
-            if (this.groupEnd == GroupEndStrategy.Exit)
+            if (setUpExit)
             {
                 // adjust index of first item
                 first++;
