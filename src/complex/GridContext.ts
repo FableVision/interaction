@@ -226,7 +226,7 @@ export class GridContext implements ComplexFocusContext
     {
         let nextX = this.gridX + x;
         let nextY = this.gridY + y;
-        while (!this.grid[nextX] || !this.grid[nextX][nextY])
+        while (!this.grid[nextX] || !this.grid[nextX][nextY] || !this.grid[nextX][nextY]!.focusable)
         {
             if (nextX < 0 || nextX >= this.gridWidth || nextY < 0 || nextY >= this.gridHeight)
             {
