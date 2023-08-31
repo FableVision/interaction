@@ -1,5 +1,5 @@
 import { DisposableGroup } from '@fablevision/utils';
-import { InteractionManager, InteractiveList } from '../InteractionManager';
+import { GroupEndStrategy, InteractionManager, InteractiveList } from '../InteractionManager';
 import { Interactive } from '../Interactive';
 import { Keyboard, KeyConfig } from '../Keyboard';
 import { StandaloneGroup } from '../StandaloneGroup';
@@ -35,6 +35,8 @@ export interface GridContextOpts
     arrowLoopsAtEdges?: boolean;
     /** Name of this context. If omitted, generates a random one. */
     name?: string;
+    /** Set to GroupEndStrategy.Exit to automatically exit the grid when tabbing past the end (at the top level column/row selection). */
+    exitRule?: GroupEndStrategy;
 }
 
 /**
@@ -48,6 +50,11 @@ export class GridContext implements ComplexFocusContext
     public name: string;
     /** Grids are complex enough that we should not allow baseline items, but this can be overridden. */
     public allowBaseline: boolean;
+    /**
+     * Advanced Use Case: This can be set as Exit for normal use, but then lock a player in
+     * with Loop before manually triggering with InteractionManager.enterGroup().
+     */
+    public exitRule: GroupEndStrategy;
     protected allItems: InteractiveList;
     protected keyConfigs: KeyConfig[];
     protected grid: (Interactive|null)[][];
@@ -72,6 +79,7 @@ export class GridContext implements ComplexFocusContext
         this.items = [];
         this.allItems = [];
         this.activeContext = 'lines';
+        this.exitRule = opts.exitRule || GroupEndStrategy.Loop;
         // get all the items for the arrow key selection
         for (let y = 0; y < this.gridHeight; ++y)
         {
