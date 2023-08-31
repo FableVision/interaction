@@ -316,6 +316,8 @@ export class Interactive implements IDisposable
         this.updateHTMLEnabled();
     }
 
+    public get focusable(): boolean { return this._visible && this._enabled; }
+
     public get isBeingHeld() : boolean { return this.activePointerId >= 0; }
 
     private updateHTMLEnabled()

@@ -408,7 +408,7 @@ export class InteractionManager
                     index = 0;
                 }
                 current = context[index];
-            } while (!current || !current.enabled || !current.visible || current.pointerOnly);
+            } while (!current || !current.focusable || current.pointerOnly);
         }
         // clear previous focus, select new focus
         this.focused = current;
@@ -443,7 +443,7 @@ export class InteractionManager
                 }
                 // select new focus
                 current = context[index];
-            } while (!current || !current.enabled || !current.visible || current.pointerOnly);
+            } while (!current || !current.focusable || current.pointerOnly);
         }
         // clear previous focus, select new focus
         this.focused = current;
