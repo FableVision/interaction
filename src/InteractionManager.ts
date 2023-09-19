@@ -337,6 +337,7 @@ export class InteractionManager
         if (!this.focusEnabled) return;
 
         this.current = target;
+        target.htmlElement.classList.add(target.focusSource);
 
         if (!this.enabled) return;
 
@@ -345,7 +346,6 @@ export class InteractionManager
             this.dwellTimeout = setTimeout(this.activate, CSS_CONFIG.dwellSeconds * 1000) as any;
             target.htmlElement.classList.add(DWELL);
         }
-        target.htmlElement.classList.add(target.focusSource);
     }
 
     private onBlurred(target: Interactive)
