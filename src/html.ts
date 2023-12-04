@@ -99,8 +99,8 @@ export class HTMLHandler implements IRendererPlugin
         }
 
         return {
-            x: ((x - rect.left) * (rect.width)) * resolutionMultiplier,
-            y: ((y - rect.top) * (rect.height)) * resolutionMultiplier,
+            x: (x - rect.left) / resolutionMultiplier,
+            y: (y - rect.top) / resolutionMultiplier,
         };
     }
 }
