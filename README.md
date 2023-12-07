@@ -46,3 +46,20 @@ const buttonInteractive = new PixiInteractive({
 buttonInteractive.onActivate.on(() => doTheThing());
 InteractionManager.instance.activateContext({items: [buttonInteractive], name: 'MyContext'});
 ```
+
+If the desired implementation is to drag a static object that is duplicated for a sticky click, make the static object draggable and have the `dragStart` event immediately call `transferDrag` on the target (duplicated) object.
+
+For example (from Marsico Bajillions, Hidden Pictures Explore):
+```js
+  let clickEv = () => {
+    let newInteractive = this.addShapeEdit(newShape.children[0], true);
+    console.log('transferring drag from', shapeInteractive, 'to', newInteractive);
+    shapeInteractive.transferDrag(newInteractive);
+  }
+  let shapeInteractive = new HTMLInteractive({
+    html: shape._renderer.elem,
+    container: this.htmlContent,
+    draggable: 2,
+  });
+  shapeInteractive.dragStart.add(clickEv);
+```
