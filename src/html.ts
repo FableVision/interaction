@@ -13,12 +13,13 @@ export class HTMLInteractive extends Interactive
     private update: IDisposable;
     private lastRect: DOMRect;
 
-    constructor(opts: InteractiveOpts & { html: HTMLElement, container: HTMLElement })
+    constructor(opts: InteractiveOpts & { html: HTMLElement, container: HTMLElement, clickArea: { width: number, height: number } })
     {
         super(opts);
 
         this.objectDisplay = opts.html;
         this.container = opts.container;
+        this.clickArea = opts.clickArea;
         this.lastRect = this.objectDisplay.getBoundingClientRect();
         this.update = globalTimer.add(() =>
         {
@@ -55,10 +56,13 @@ export class HTMLInteractive extends Interactive
                 scale = parseFloat(this.container.dataset.scale);
             }
 
-            div.style.left = `${(bounds.x - containerBounds.left) / scale}px`;
-            div.style.top = `${(bounds.y - containerBounds.top) / scale}px`;
-            div.style.width = `${bounds.width / scale}px`;
-            div.style.height = `${bounds.height / scale}px`;
+            let width = (this.clickArea.width || bounds.width);
+            let height = (this.clickArea.height || bounds.height);
+
+            div.style.left = `${(bounds.x - containerBounds.left + ((bounds.width / 2) - (width / 2))) / scale}px`;
+            div.style.top = `${(bounds.y - containerBounds.top + ((bounds.height / 2) - (height / 2))) / scale}px`;
+            div.style.width = `${width / scale}px`;
+            div.style.height = `${height / scale}px`;
         }
     }
 
