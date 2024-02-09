@@ -12,6 +12,7 @@ export class HTMLInteractive extends Interactive
     private container: HTMLElement;
     private update: IDisposable;
     private lastRect: DOMRect;
+    private clickArea: { width: number, height: number };
 
     constructor(opts: InteractiveOpts & { html: HTMLElement, container: HTMLElement, clickArea: { width: number, height: number } })
     {
