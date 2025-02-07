@@ -1,6 +1,6 @@
 import './pixi';
 
-import { Application } from '@pixi/app';
+import { Application } from 'pixi.js';
 import { globalTimer } from '@fablevision/utils';
 import { Keyboard, InteractionManager, ControlStrategy } from '../dist';
 import { PixiHandler } from '../dist/pixi';

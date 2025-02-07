@@ -1,5 +1,5 @@
 import { Disposable, DisposableGroup } from '@fablevision/utils';
-import { Container } from '@pixi/display';
+import { Container } from 'pixi.js';
 import { DragStrategy, drag, InteractionManager } from '../dist';
 import {HEIGHT, Test, TestUI, WIDTH} from './shared';
 

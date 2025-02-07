@@ -1,9 +1,6 @@
 import { Keyboard, InteractionManager, InteractiveOpts, IPoint } from '../dist';
 import { PixiInteractive } from '../dist/pixi';
-import { Text } from '@pixi/text';
-import { Sprite } from '@pixi/sprite';
-import { Texture } from '@pixi/core';
-import { Container } from '@pixi/display';
+import { Text, Sprite, Texture, Container } from 'pixi.js';
 
 export const WIDTH = 2160;
 export const HEIGHT = 1080;

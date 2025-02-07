@@ -8,11 +8,11 @@
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
         // "sourceMap": true,
+        "skipLibCheck": true,
 
         "strict": true,
         "noImplicitAny": true,
-        "noImplicitThis": true,
-        "types": ["@types/offscreencanvas"]
+        "noImplicitThis": true
     },
     "includes": [
         "./index.ts"

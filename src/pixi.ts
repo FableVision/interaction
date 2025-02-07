@@ -1,12 +1,23 @@
-import type { DisplayObject } from '@pixi/display';
-import { Rectangle } from '@pixi/math';
-import { AbstractRenderer } from '@pixi/core';
+import { DisplayObject, Rectangle } from 'pixi.js';
 import { Interactive, InteractiveOpts, IPoint, } from './Interactive';
 import { IRendererPlugin } from './InteractionManager';
 import { globalTimer, IDisposable } from '@fablevision/utils';
 import { areRectsDifferent, copyRectTo } from './internal';
 
 const helperRect = new Rectangle();
+
+export interface IView
+{
+    width: number;
+    height: number;
+    getBoundingClientRect(): {width: number, height: number, top: number, left: number};
+}
+
+export interface IRenderer
+{
+    view: IView;
+    resolution: number;
+}
 
 /**
  * PixiInteractive will attempt to keep the accessibility position synced with the pixi DisplayObject
@@ -100,17 +111,17 @@ export class PixiInteractive extends Interactive
 
 export class PixiHandler implements IRendererPlugin
 {
-    private pixi: AbstractRenderer;
+    private pixi: IRenderer;
 
-    constructor(pixi: AbstractRenderer)
+    constructor(pixi: IRenderer)
     {
-        this.pixi = pixi;
+        this.pixi = pixi as any;
     }
 
     mapClientPosToPoint(x: number, y: number): IPoint
     {
         const view = this.pixi.view;
-        const rect = view.getBoundingClientRect();
+        const rect = view.getBoundingClientRect()!;
         const resolutionMultiplier = 1.0 / this.pixi.resolution;
 
         return {

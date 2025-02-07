@@ -1,6 +1,4 @@
-import { Application } from '@pixi/app';
-import { Renderer, BatchRenderer, extensions } from '@pixi/core';
-import { TickerPlugin } from '@pixi/ticker';
+import { TickerPlugin, BatchRenderer, extensions } from 'pixi.js';
 
 // Install renderer plugins
 extensions.add(BatchRenderer);
