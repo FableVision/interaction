@@ -191,7 +191,7 @@ export class Interactive implements IDisposable
     /** If the active (held) pointer is in the element */
     protected pointerIn: boolean = false;
     /** Is draggable (don't emit activate on clicks) */
-    protected draggable: DragStrategy;
+    public draggable: DragStrategy;
     /** Minimum distance mouse must move to not be considered a click */
     protected minDragDistSq: number;
     /** Position for tracking distance */
