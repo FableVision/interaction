@@ -4,12 +4,10 @@ import { InteractionManager, InteractiveList } from '../InteractionManager';
 import { DragType, Interactive } from '../Interactive';
 import { Keyboard } from '../Keyboard';
 import { DragTarget, IDragController } from './interfaces';
-import { StandardDrag } from './StandardDrag';
+import { StandardDrag, StandardDragOpts } from './StandardDrag';
 
-export interface DropAreaDragOpts<T extends DragTarget>
+export interface DropAreaDragOpts<T extends DragTarget> extends StandardDragOpts<T>
 {
-    target: T;
-    interactive: Interactive;
     dropAreas: InteractiveList|ComplexFocusContext;
     /**
      * Custom hit testing for pointer-driven drags - return -1 for no area hit,
@@ -81,7 +79,7 @@ export class DropAreaDrag<T extends DragTarget> implements IDragController<T, nu
                 }
             }));
         }
-        this.pointer = new StandardDrag({target: this.target, interactive: this.interactive});
+        this.pointer = new StandardDrag(opts);
         this.dragStarted = new DoubleEvent();
         this.dragComplete = new DoubleEvent();
         this.dragFailed = new Event();
