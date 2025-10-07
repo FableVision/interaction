@@ -9,6 +9,7 @@ import dragTest from './drag';
 import shortcutTest from './keyboardShortcut';
 import dropTest from './dropArea';
 import gridTest from './grid';
+import justMoveTest from './justMove';
 
 const layoutWidth = WIDTH;
 const layoutHeight = HEIGHT;
@@ -55,7 +56,7 @@ focus.setBaseline([], [nextButton.interact]);
 
 // ************************
 // now, the actual test begins
-const tests = [dragTest, shortcutTest, dropTest, gridTest];
+const tests = [dragTest, shortcutTest, dropTest, gridTest, justMoveTest];
 let currentIndex = -1;
 let currentTest = null as Test|null;
 

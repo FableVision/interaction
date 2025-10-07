@@ -46,7 +46,13 @@ export enum DragStrategy
     /** Drag with mouse/touch, but clicking/tapping activates the element instead */
     DragOrClick,
     /** Drag with mouse/touch, but clicking/tapping starts a "sticky" drag, where another click/tap ends the drag. */
-    DragWithStickyClickTap
+    DragWithStickyClickTap,
+    /**
+     * Track mouse position (or primary touch) while inside the area (touch must start inside).
+     * This will also prevent taps/clicks (so as to track touches), and is expected that you
+     * also turn on pointerOnly and disable the focus highlight.
+     */
+    LocalMoveNoDrag
 }
 
 export enum KeyboardActivateStrategy
@@ -172,6 +178,7 @@ export class Interactive implements IDisposable
     public dragStart: DoubleEvent<IPoint, DragType>;
     public dragMove: DoubleEvent<IPoint, DragType>;
     public dragStop: DoubleEvent<IPoint, DragType>;
+    public mouseMove: Event<IPoint>;
     public keyStart: Event<void>;
     public keyStop: Event<void>;
     /** Always enable dwell activation on this item. */
@@ -208,6 +215,7 @@ export class Interactive implements IDisposable
         this.dragStart = new DoubleEvent();
         this.dragMove = new DoubleEvent();
         this.dragStop = new DoubleEvent();
+        this.mouseMove = new Event();
         this.keyStart = new Event();
         this.keyStop = new Event();
         this.alwaysDwell = !!opts.alwaysDwell;
@@ -262,11 +270,13 @@ export class Interactive implements IDisposable
             this.onPointerUp = this.onPointerUp.bind(this);
             this.onPointerOver = this.onPointerOver.bind(this);
             this.onPointerOut = this.onPointerOut.bind(this);
+            this.onLocalMove = this.onLocalMove.bind(this);
             // TODO: could probably be improved here
             this.htmlElement.addEventListener(EVENTS.down as any, this.onPointerDown);
             this.htmlElement.addEventListener(EVENTS.over as any, this.onPointerOver);
             this.htmlElement.addEventListener(EVENTS.out as any, this.onPointerOut);
             this.htmlElement.addEventListener('pointercancel', () => this.blur());
+            this.htmlElement.addEventListener(EVENTS.move as any, this.onLocalMove);
             // this.htmlElement.addEventListener('click', (ev) => console.log('Caught mystery click', ev));
         }
         this.htmlElement.addEventListener('focus', () => {
@@ -367,6 +377,7 @@ export class Interactive implements IDisposable
         this.dragStart.dispose();
         this.dragMove.dispose();
         this.dragStop.dispose();
+        this.mouseMove.dispose();
         this.keyStart.dispose();
         this.keyStop.dispose();
         this.removeWindowListeners();
@@ -472,8 +483,25 @@ export class Interactive implements IDisposable
         }
     }
 
+    private onLocalMove(ev: PointerEvent|TouchEvent|MouseEvent)
+    {
+        if (!this.manager!.enabled || !this._enabled) return;
+
+        if (this.draggable == DragStrategy.LocalMoveNoDrag)
+        {
+            const id = this.getId(ev);
+            if (id == this.activePointerId || !isTouch(ev))
+            {
+                const point = this.mapEvToPoint(ev);
+                this.mouseMove.emit(point);
+            }
+        }
+    }
+
     private addWindowEvents()
     {
+        this.removeWindowListeners();
+
         window.addEventListener(EVENTS.move as any, this.onPointerMove);
         window.addEventListener(EVENTS.up as any, this.onPointerUp);
         if (EVENTS.cancel)
@@ -560,6 +588,11 @@ export class Interactive implements IDisposable
                     // still free the pointer id
                     idTracker.freeId(this.activePointerId);
                 }
+                else if (this.draggable == DragStrategy.LocalMoveNoDrag)
+                {
+                    // don't fall through to next else if, because we don't want
+                    // to activate for drag only
+                }
                 else if (this.draggable != DragStrategy.DragOnly)
                 {
                     this.onActivate.emit(this.mapEvToPoint(ev));
@@ -597,7 +630,8 @@ export class Interactive implements IDisposable
 
         idTracker.freeId(this.activePointerId);
         this.activePointerId = -1;
-        this.removeWindowListeners();
+        if (this.draggable != DragStrategy.LocalMoveNoDrag)
+            this.removeWindowListeners();
     }
 
     private getId(ev: PointerEvent|TouchEvent|MouseEvent): number
