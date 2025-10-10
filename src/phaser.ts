@@ -3,6 +3,7 @@ import { Interactive, InteractiveOpts, IPoint, } from './Interactive';
 import { IRendererPlugin } from './InteractionManager';
 import { globalTimer, IDisposable } from '@fablevision/utils';
 import { areRectsDifferent, copyRectTo } from './internal';
+import { Game, Scene } from 'phaser';
 
 const helperRect = new Phaser.Geom.Rectangle();
 
@@ -10,6 +11,7 @@ type Matrix = Phaser.GameObjects.Components.TransformMatrix;
 
 export interface PhaserObject
 {
+    scene: Scene;
     visible: boolean;
     getWorldTransformMatrix(tempMatrix?: Matrix, parentMatrix?: Matrix): Matrix;
     getBounds(rect: Phaser.Geom.Rectangle): Phaser.Geom.Rectangle;
@@ -23,16 +25,18 @@ export class PhaserInteractive extends Interactive
 {
     /** The sprite object this represents */
     private objectDisplay: PhaserObject;
+    private game: Game | null;
     private transformMatrix: Matrix;
     private update: IDisposable;
     private lastRect: Phaser.Geom.Rectangle;
 
-    constructor(opts: InteractiveOpts & { phaser: PhaserObject })
+    constructor(opts: InteractiveOpts & { phaser: PhaserObject, game?: Game })
     {
         super(opts);
 
         this.transformMatrix = new Phaser.GameObjects.Components.TransformMatrix();
         this.objectDisplay = opts.phaser;
+        this.game = opts.game ?? null;
         this.lastRect = new Phaser.Geom.Rectangle();
         this.update = globalTimer.add(() =>
         {
@@ -54,14 +58,19 @@ export class PhaserInteractive extends Interactive
     {
         const div = this.htmlElement;
         const hitArea = (this.objectDisplay as any).input?.hitArea;
+        let cameraPos = { x: this.objectDisplay.scene?.cameras?.main?.scrollX ?? 0, y: this.objectDisplay.scene?.cameras?.main?.scrollY ?? 0 };
         if (hitArea)
         {
             this.objectDisplay.getWorldTransformMatrix(this.transformMatrix);
 
-            helperRect.x = this.transformMatrix.tx + (hitArea.x * this.transformMatrix.a);
-            helperRect.y = this.transformMatrix.ty + (hitArea.y * this.transformMatrix.d);
-            helperRect.width = hitArea.width * this.transformMatrix.a;
-            helperRect.height = hitArea.height * this.transformMatrix.d;
+            helperRect.x = this.transformMatrix.tx + (hitArea.x * Math.abs(this.transformMatrix.a)) - cameraPos.x;
+            helperRect.y = this.transformMatrix.ty + (hitArea.y * Math.abs(this.transformMatrix.d)) - cameraPos.y;
+            helperRect.width = hitArea.width * Math.abs(this.transformMatrix.a);
+            helperRect.height = hitArea.height * Math.abs(this.transformMatrix.d);
+
+            if (this.game && helperRect.y + helperRect.height > this.game.canvas.height) {
+                helperRect.height = helperRect.height - ((helperRect.y + helperRect.height) - this.game.canvas.height);
+            }
 
             if (areRectsDifferent(helperRect, this.lastRect))
             {
@@ -76,6 +85,12 @@ export class PhaserInteractive extends Interactive
         else
         {
             const bounds = this.objectDisplay.getBounds(helperRect);
+            bounds.x = bounds.x - cameraPos.x;
+            bounds.y = bounds.y - cameraPos.y;
+
+            if (this.game && bounds.y + bounds.height > this.game.canvas.height) {
+                bounds.height = bounds.height - ((bounds.y + bounds.height) - this.game.canvas.height);
+            }
 
             if (areRectsDifferent(helperRect, this.lastRect))
             {
