@@ -7,6 +7,11 @@ export interface StandardDragOpts<T extends DragTarget>
     target: T;
     interactive: Interactive;
     bounds?: DragBounds|DragBoundsValidator<T>;
+    /**
+     * If no drag offset should be used and the targets position should follow the pointer
+     * exactly.
+     */
+    ignoreOffset?: boolean;
 }
 
 /**
@@ -18,6 +23,7 @@ export class StandardDrag<T extends DragTarget> implements IDragController<T>
     private interactive: Interactive;
     private bounds: DragBounds|DragBoundsValidator<T>|null;
     private dragOffset: IPoint;
+    private ignoreOffset: boolean;
     private currentDragType: DragType|null;
     private cleanup: DisposableGroup;
     public dragStarted: DoubleEvent<T, DragType>;
@@ -28,6 +34,7 @@ export class StandardDrag<T extends DragTarget> implements IDragController<T>
         this.target = opts.target;
         this.interactive = opts.interactive;
         this.bounds = opts.bounds || null;
+        this.ignoreOffset = !!opts.ignoreOffset;
         this.dragOffset = {x: 0, y: 0};
         this.currentDragType = null;
         this.dragStarted = new DoubleEvent();
@@ -45,8 +52,11 @@ export class StandardDrag<T extends DragTarget> implements IDragController<T>
     private onDragStart(globalPos: IPoint, type: DragType)
     {
         this.currentDragType = type;
-        this.dragOffset.x = this.target.x - globalPos.x;
-        this.dragOffset.y = this.target.y - globalPos.y;
+        if (!this.ignoreOffset)
+        {
+            this.dragOffset.x = this.target.x - globalPos.x;
+            this.dragOffset.y = this.target.y - globalPos.y;
+        }
 
         this.dragStarted.emit(this.target, this.currentDragType);
     }
