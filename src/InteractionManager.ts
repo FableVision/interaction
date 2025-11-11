@@ -129,6 +129,12 @@ export interface InteractionManagerOpts
     control?: ControlStrategy;
     /** If focus & blur should still function when the InteractionManager is disabled. */
     focusWhenDisabled?: boolean;
+    /**
+     * If the interaction manager should automatically pop back to parent contexts when an item not in the current context
+     * is interacted with. It would probably be good to have this be true all the time, but is new/experimental and I don't
+     * want to break anything.
+     */
+    autoPopOnParentInteraction?: boolean;
 }
 
 export class InteractionManager
@@ -159,6 +165,8 @@ export class InteractionManager
     private groupEnd: GroupEndStrategy;
     private controls: ControlStrategy;
     private controlsListener: Disposable|null;
+    private autoPop: boolean;
+    private itemsWeAttached: WeakSet<Interactive>;
 
     constructor(opts: InteractionManagerOpts)
     {
@@ -168,6 +176,8 @@ export class InteractionManager
         this.controls = opts.control || ControlStrategy.BrowserNative;
         this.controlsListener = null;
         this.focusWhenDisabled = !!opts.focusWhenDisabled;
+        this.autoPop = !!opts.autoPopOnParentInteraction;
+        this.itemsWeAttached = new WeakSet();
 
         this.renderer = opts.renderer;
         if (typeof opts.accessibilityDiv == 'string')
@@ -276,6 +286,7 @@ export class InteractionManager
 
         if (this.current)
         {
+            this.current.internalOnEarly.emit(this.current);
             this.current.keyStart.emit();
 
             // since we are interacting with the game, lock the player back in
@@ -341,7 +352,7 @@ export class InteractionManager
 
         if (!this.enabled) return;
 
-        if ((target.alwaysDwell || this.useDwell) && ! target.isBeingHeld)
+        if ((target.alwaysDwell || this.useDwell) && !target.isBeingHeld)
         {
             this.dwellTimeout = setTimeout(this.activate, CSS_CONFIG.dwellSeconds * 1000) as any;
             target.htmlElement.classList.add(DWELL);
@@ -721,6 +732,15 @@ export class InteractionManager
             this.currentDisposable.add(item.onFocus.add(() => this.onFocused(item)));
             this.currentDisposable.add(item.onBlur.add(() => this.onBlurred(item)));
 
+            if (this.autoPop)
+            {
+                if (!this.itemsWeAttached.has(item))
+                {
+                    this.itemsWeAttached.add(item);
+                    item.internalOnEarly.on(this.popToItem);
+                }
+            }
+
             if (item.childContext)
             {
                 this.currentDisposable.add(item.onActivate.add(() => this.enterGroup(item)));
@@ -738,6 +758,14 @@ export class InteractionManager
         // in order to simplify keyboard order
         for (const child of items)
         {
+            if (this.autoPop)
+            {
+                if (!this.itemsWeAttached.has(child))
+                {
+                    this.itemsWeAttached.add(child);
+                    child.internalOnEarly.on(this.popToItem);
+                }
+            }
             if (child.isGroup)
             {
                 this.recursiveAddChildren(child, existingList);
@@ -762,6 +790,14 @@ export class InteractionManager
         {
             for (const item of current.parent.items)
             {
+                if (this.autoPop)
+                {
+                    if (!this.itemsWeAttached.has(item))
+                    {
+                        this.itemsWeAttached.add(item);
+                        item.internalOnEarly.on(this.popToItem);
+                    }
+                }
                 if (item.childContext)
                 {
                     this.recursiveAddChildren(item, existingList);
@@ -774,7 +810,6 @@ export class InteractionManager
                 item.htmlElement.tabIndex = -1;
                 this.currentDisposable.add(item.onFocus.add(() => this.onFocused(item)));
                 this.currentDisposable.add(item.onBlur.add(() => this.onBlurred(item)));
-
             }
             this.recursiveAddParents(current.parent, existingList);
         }
@@ -816,4 +851,50 @@ export class InteractionManager
             this.clearFocus();
         }
     }
+
+    private popToItem = (item: Interactive) =>
+    {
+        if (!this.currentContext || this.currentContext.items.includes(item)) return;
+
+        seenItemsHelper.clear();
+        // if a child of the current thing, then
+        if (isInListOrChild(item, this.currentContext.items))
+        {
+            seenItemsHelper.clear();
+            return;
+        }
+        let foundContext: string|null = null;
+        for (let i = this.contexts.length - 2; i >= 0; --i)
+        {
+            if (isInListOrChild(item, this.contexts[i].items))
+            {
+                foundContext = this.contexts[i].name;
+                break;
+            }
+            if (!this.contexts[i].parent)
+                break;
+        }
+        if (foundContext)
+            this.popContext(foundContext, true);
+    }
+}
+
+const seenItemsHelper = new Set();
+function isInListOrChild(target: Interactive, items: InteractiveList): boolean
+{
+    for (let i = items.length - 1; i >= 0; --i)
+    {
+        const item = items[i];
+        if (seenItemsHelper.has(item)) continue;
+
+        if (item == target) return true;
+        seenItemsHelper.add(item);
+        const children = item.childContext;
+        if (children)
+        {
+            if (isInListOrChild(target, Array.isArray(children) ? children : children.items))
+                return true;
+        }
+    }
+    return false;
 }

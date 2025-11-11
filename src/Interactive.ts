@@ -181,6 +181,11 @@ export class Interactive implements IDisposable
     public mouseMove: Event<IPoint>;
     public keyStart: Event<void>;
     public keyStop: Event<void>;
+    /**
+     * @internal
+     * Happens on key start, onActivate, and dragStart, before the actual events fire.
+     */
+    public internalOnEarly: Event<this>;
     /** Always enable dwell activation on this item. */
     public alwaysDwell: boolean;
     /** Should not be accessible via keyboard ever. */
@@ -218,6 +223,7 @@ export class Interactive implements IDisposable
         this.mouseMove = new Event();
         this.keyStart = new Event();
         this.keyStop = new Event();
+        this.internalOnEarly = new Event();
         this.alwaysDwell = !!opts.alwaysDwell;
         if (!opts.draggable || typeof opts.draggable == 'boolean')
         {
@@ -380,6 +386,7 @@ export class Interactive implements IDisposable
         this.mouseMove.dispose();
         this.keyStart.dispose();
         this.keyStop.dispose();
+        this.internalOnEarly.dispose();
         this.removeWindowListeners();
         // ensure that the div doesn't stick around
         this.htmlElement.remove();
@@ -472,6 +479,8 @@ export class Interactive implements IDisposable
 
             if (this.draggable == DragStrategy.DragOnly)
             {
+                this.internalOnEarly.emit(this);
+
                 this.currentDragType = DragType.Held;
                 this.dragStart.emit(point, this.currentDragType);
             }
@@ -533,6 +542,7 @@ export class Interactive implements IDisposable
             {
                 if (distSq(point, this.dragStartPoint) >= this.minDragDistSq)
                 {
+                    this.internalOnEarly.emit(this);
                     this.currentDragType = DragType.Held;
                     this.dragStart.emit(this.dragStartPoint, this.currentDragType);
                 }
@@ -574,6 +584,8 @@ export class Interactive implements IDisposable
         {
             if (this.manager!.enabled)
             {
+                this.internalOnEarly.emit(this);
+
                 if (!touch && (this.draggable == DragStrategy.DragWithStickyClick || this.draggable == DragStrategy.DragWithStickyClickTap))
                 {
                     this.currentDragType = DragType.StickyClick;
