@@ -154,8 +154,8 @@ export class InteractionManager
     private baselineContext: BaselineContext;
     /** Stack of explicit contexts */
     private contexts: InternalContext[] = [];
-    /** The combined current context */
-    private currentContext: {items: InteractiveList, parent:InteractiveList|null}|null = null;
+    /** The combined current context - items for the main context, extendedFamily for parents/children that are mouse only */
+    private currentContext: {items: InteractiveList, extendedFamily:InteractiveList|null}|null = null;
     /** Listener cleanup for the current context */
     private currentDisposable: DisposableGroup;
     private current: Interactive|null = null;
@@ -666,22 +666,10 @@ export class InteractionManager
             {
                 item.htmlElement.remove();
             }
-
-            if (item.childContext)
-            {
-                const items = Array.isArray(item.childContext) ? item.childContext : item.childContext.items;
-                for (const child of items)
-                {
-                    if (child != keep)
-                    {
-                        child.htmlElement.remove();
-                    }
-                }
-            }
         }
-        if (this.currentContext.parent)
+        if (this.currentContext.extendedFamily)
         {
-            list = this.currentContext.parent;
+            list = this.currentContext.extendedFamily;
             for (let i = 0; i < list.length; ++i)
             {
                 const item = list[i];
@@ -720,8 +708,9 @@ export class InteractionManager
         // remove anything currently there, keeping the current focus item if it is staying in the main context
         this.removeCurrentContext((this.current && list.includes(this.current)) ? this.current : undefined);
 
-        this.currentContext = {items: list, parent: current.parent?.items||null};
+        this.currentContext = {items: list, extendedFamily: null};
         const added = list.slice();
+        const fullFamily: InteractiveList = [];
         for (let i = 0; i < list.length; ++i)
         {
             const item = list[i];
@@ -744,13 +733,15 @@ export class InteractionManager
             if (item.childContext)
             {
                 this.currentDisposable.add(item.onActivate.add(() => this.enterGroup(item)));
-                this.recursiveAddChildren(item, added);
+                this.recursiveAddChildren(item, added, fullFamily);
             }
         }
-        this.recursiveAddParents(current, added);
+        this.recursiveAddParents(current, added, fullFamily);
+        if (fullFamily.length)
+            this.currentContext.extendedFamily = fullFamily;
     }
 
-    private recursiveAddChildren(item: Interactive, existingList: InteractiveList)
+    private recursiveAddChildren(item: Interactive, existingList: InteractiveList, fullFamily: InteractiveList)
     {
         if (!item.childContext) return;
         const items = Array.isArray(item.childContext) ? item.childContext : item.childContext.items;
@@ -768,11 +759,12 @@ export class InteractionManager
             }
             if (child.isGroup)
             {
-                this.recursiveAddChildren(child, existingList);
+                this.recursiveAddChildren(child, existingList, fullFamily);
             }
             if (existingList.includes(child) || child.isGroup || child.keyboardOnly) continue;
 
             existingList.push(child);
+            fullFamily.push(child);
             child.manager = this;
             this.htmlContainer.appendChild(child.htmlElement);
             // set tab index to -1 to allow use by focus() but not tab
@@ -782,7 +774,7 @@ export class InteractionManager
         }
     }
 
-    private recursiveAddParents(current: InternalContext, existingList: InteractiveList)
+    private recursiveAddParents(current: InternalContext, existingList: InteractiveList, fullFamily: InteractiveList)
     {
         // if this is part of a parent context, then keep the parent context enabled but with
         // no keyboard access
@@ -800,18 +792,19 @@ export class InteractionManager
                 }
                 if (item.childContext)
                 {
-                    this.recursiveAddChildren(item, existingList);
+                    this.recursiveAddChildren(item, existingList, fullFamily);
                 }
                 if (existingList.includes(item) || item.isGroup || item.keyboardOnly) continue;
 
                 existingList.push(item);
+                fullFamily.push(item);
                 this.htmlContainer.appendChild(item.htmlElement);
                 // set tab index to -1 to allow use by focus() but not tab
                 item.htmlElement.tabIndex = -1;
                 this.currentDisposable.add(item.onFocus.add(() => this.onFocused(item)));
                 this.currentDisposable.add(item.onBlur.add(() => this.onBlurred(item)));
             }
-            this.recursiveAddParents(current.parent, existingList);
+            this.recursiveAddParents(current.parent, existingList, fullFamily);
         }
     }
 
