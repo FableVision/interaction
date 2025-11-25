@@ -62,7 +62,23 @@ export class PixiInteractive extends Interactive
 
         const div = this.htmlElement;
         const hitArea = (this.pixiDisplay as any).hitArea;
-        if (hitArea && hitArea instanceof Rectangle)
+        if (this.htmlIsOverridden)
+        {
+            // just get the x/y of the display object, assume the user of
+            // the override is keeping the override shape/element size and local position correct
+            const wt = this.pixiDisplay.worldTransform;
+            helperRect.x = wt.tx;
+            helperRect.y = wt.ty;
+
+            if (areRectsDifferent(helperRect, this.lastRect))
+            {
+                copyRectTo(helperRect, this.lastRect);
+
+                div.style.left = `${helperRect.x}px`;
+                div.style.top = `${helperRect.y}px`;
+            }
+        }
+        else if (hitArea && hitArea instanceof Rectangle)
         {
             const wt = this.pixiDisplay.worldTransform;
             helperRect.x = wt.tx + (hitArea.x * wt.a);

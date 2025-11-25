@@ -2,7 +2,7 @@ import './pixi';
 
 import { Application } from 'pixi.js';
 import { globalTimer } from '@fablevision/utils';
-import { Keyboard, InteractionManager, ControlStrategy } from '../dist';
+import { Keyboard, InteractionManager, ControlStrategy, CSS_CONFIG } from '../dist';
 import { PixiHandler } from '../dist/pixi';
 import { HEIGHT, Test, TestUI, WIDTH } from './shared';
 import dragTest from './drag';
@@ -10,6 +10,7 @@ import shortcutTest from './keyboardShortcut';
 import dropTest from './dropArea';
 import gridTest from './grid';
 import justMoveTest from './justMove';
+import svgTest from './svg';
 
 const layoutWidth = WIDTH;
 const layoutHeight = HEIGHT;
@@ -56,7 +57,7 @@ focus.setBaseline([], [nextButton.interact]);
 
 // ************************
 // now, the actual test begins
-const tests = [dragTest, shortcutTest, dropTest, gridTest, justMoveTest];
+const tests = [dragTest, shortcutTest, dropTest, gridTest, justMoveTest, svgTest];
 let currentIndex = -1;
 let currentTest = null as Test|null;
 

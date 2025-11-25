@@ -59,7 +59,23 @@ export class PhaserInteractive extends Interactive
         const div = this.htmlElement;
         const hitArea = (this.objectDisplay as any).input?.hitArea;
         let cameraPos = { x: this.objectDisplay.scene?.cameras?.main?.scrollX ?? 0, y: this.objectDisplay.scene?.cameras?.main?.scrollY ?? 0 };
-        if (hitArea)
+        if (this.htmlIsOverridden)
+        {
+            // just get the x/y of the display object, assume the user of
+            // the override is keeping the override shape/element size and local position correct
+            this.objectDisplay.getWorldTransformMatrix(this.transformMatrix);
+            helperRect.x = this.transformMatrix.tx - cameraPos.x;
+            helperRect.y = this.transformMatrix.ty - cameraPos.y;
+
+            if (areRectsDifferent(helperRect, this.lastRect))
+            {
+                copyRectTo(helperRect, this.lastRect);
+
+                div.style.left = `${helperRect.x}px`;
+                div.style.top = `${helperRect.y}px`;
+            }
+        }
+        else if (hitArea)
         {
             this.objectDisplay.getWorldTransformMatrix(this.transformMatrix);
 

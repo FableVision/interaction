@@ -49,20 +49,73 @@ export const CSS_CONFIG =
 
 function getFocusCSS(): string
 {
-    return `.${INTERACTIVE_CLASS}:focus {
+    return `:not(svg).${INTERACTIVE_CLASS}:focus {
     outline-style: ${CSS_CONFIG.normalStyle};
     outline-width: ${CSS_CONFIG.normalWidth}px;
     outline-color: ${CSS_CONFIG.color};
 }
-.${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus {
+svg.${INTERACTIVE_CLASS}:focus polyline,
+svg.${INTERACTIVE_CLASS}:focus polygon,
+svg.${INTERACTIVE_CLASS}:focus circle,
+svg.${INTERACTIVE_CLASS}:focus ellipse,
+svg.${INTERACTIVE_CLASS}:focus rectangle,
+svg.${INTERACTIVE_CLASS}:focus line,
+svg.${INTERACTIVE_CLASS}:focus path {
+    stroke: ${CSS_CONFIG.color};
+}
+:not(svg).${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus {
     outline-color: ${CSS_CONFIG.showFocusWithMouse ? CSS_CONFIG.color : 'transparent'};
 }
-.${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus {
+svg.${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus polyline,
+svg.${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus polygon,
+svg.${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus circle,
+svg.${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus ellipse,
+svg.${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus rectangle,
+svg.${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus line,
+svg.${INTERACTIVE_CLASS}.${MOUSE}:not(.${DWELL}):focus path {
+    stroke: ${CSS_CONFIG.showFocusWithMouse ? CSS_CONFIG.color : 'none'};
+}
+:not(svg).${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus {
     outline-color: ${CSS_CONFIG.showFocusWithTouch ? CSS_CONFIG.color : 'transparent'};
 }
-.${INTERACTIVE_CLASS}.${GROUP_CLASS}:focus {
+svg.${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus polyline,
+svg.${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus polygon,
+svg.${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus circle,
+svg.${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus ellipse,
+svg.${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus rectangle,
+svg.${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus line,
+svg.${INTERACTIVE_CLASS}.${TOUCH}:not(.${DWELL}):focus path {
+    stroke: ${CSS_CONFIG.showFocusWithMouse ? CSS_CONFIG.color : 'none'};
+}
+:not(svg).${INTERACTIVE_CLASS}.${GROUP_CLASS}:focus {
     outline-style: ${CSS_CONFIG.groupStyle} !important;
     outline-width: ${CSS_CONFIG.groupWidth}px !important;
+}
+
+svg.${INTERACTIVE_CLASS} {
+    /* disable interaction with the whole rectangle */
+    pointer-events: none;
+    /* hide built in outline */
+    outline: none;
+    /* allow outlines/strokes to go outside view box */
+    overflow: visible;
+}
+
+svg.${INTERACTIVE_CLASS} polygon,
+svg.${INTERACTIVE_CLASS} circle,
+svg.${INTERACTIVE_CLASS} ellipse,
+svg.${INTERACTIVE_CLASS} rectangle,
+svg.${INTERACTIVE_CLASS} path {
+    pointer-events: all;
+    /* invisible until we use the stroke to do the highlight */
+    stroke: none;
+}
+
+svg.${INTERACTIVE_CLASS} polyline,
+svg.${INTERACTIVE_CLASS} line {
+    pointer-events: stroke;
+    /* invisible until we use the stroke to do the highlight */
+    stroke: none;
 }
 
 .${INTERACTIVE_CLASS} {
@@ -70,7 +123,7 @@ function getFocusCSS(): string
     touch-action: none;
 }
 
-.${INTERACTIVE_CLASS}.${DWELL} {
+:not(svg).${INTERACTIVE_CLASS}.${DWELL} {
     animation-duration: ${CSS_CONFIG.dwellSeconds}s;
     animation-name: dwell-activate;
 }

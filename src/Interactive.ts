@@ -89,6 +89,11 @@ export interface InteractiveOpts
     pointerOnly?: boolean;
     keyboardOnly?: boolean;
     keyControl?: KeyboardActivateStrategy;
+    /**
+     * If a custom HTML element is passed in here, the interactive won't modify the
+     * width/height of the element, but will adjust its position.
+     */
+    htmlOverride?: HTMLElement;
 }
 
 export interface IPoint
@@ -194,6 +199,8 @@ export class Interactive implements IDisposable
     public keyboardOnly: boolean;
     /** The invisible HTML element for this item to handle all clicks & highlighting */
     public htmlElement: HTMLElement;
+    /** If a custom HTML element was passed in the interactive options. */
+    protected htmlIsOverridden: boolean;
     /** If this focus item is a group (and should use a different focus UI as a signifier), the child context to be used upon activation */
     public childContext: InteractiveList | ComplexFocusContext | null;
     protected _visible: boolean = true;
@@ -248,7 +255,11 @@ export class Interactive implements IDisposable
                 }
             });
         }
-        this.htmlElement = document.createElement('div');
+        if (opts.htmlOverride)
+            this.htmlElement = opts.htmlOverride;
+        else
+            this.htmlElement = document.createElement('div');
+        this.htmlIsOverridden = !!opts.htmlOverride;
         this.htmlElement.classList.add('interactive');
         this.childContext = opts.childContext ? opts.childContext : null;
         if (opts.role)
