@@ -39,7 +39,7 @@ export class PhaserInteractive extends Interactive
         this.objectDisplay = opts.phaser;
         this.game = opts.game ?? null;
         this.lastRect = new Phaser.Geom.Rectangle();
-        this.lastPos = new Phaser.Geom.Point();
+        this.lastPos = new Phaser.Geom.Point(Infinity, Infinity);
         this.update = globalTimer.add(() =>
         {
             if (this.objectDisplay.visible)

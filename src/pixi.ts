@@ -39,7 +39,7 @@ export class PixiInteractive extends Interactive
         this.pixiDisplay = opts.pixi;
         this.boundsID = -1;
         this.lastRect = new Rectangle();
-        this.lastPos = new Point();
+        this.lastPos = new Point(Infinity, Infinity);
         this.update = globalTimer.add(() =>
         {
             if (this.pixiDisplay.worldVisible)
