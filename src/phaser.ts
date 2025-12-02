@@ -29,6 +29,7 @@ export class PhaserInteractive extends Interactive
     private transformMatrix: Matrix;
     private update: IDisposable;
     private lastRect: Phaser.Geom.Rectangle;
+    private lastPos: Phaser.Geom.Point;
 
     constructor(opts: InteractiveOpts & { phaser: PhaserObject, game?: Game })
     {
@@ -38,6 +39,7 @@ export class PhaserInteractive extends Interactive
         this.objectDisplay = opts.phaser;
         this.game = opts.game ?? null;
         this.lastRect = new Phaser.Geom.Rectangle();
+        this.lastPos = new Phaser.Geom.Point();
         this.update = globalTimer.add(() =>
         {
             if (this.objectDisplay.visible)
@@ -73,6 +75,15 @@ export class PhaserInteractive extends Interactive
 
                 div.style.left = `${helperRect.x}px`;
                 div.style.top = `${helperRect.y}px`;
+
+                // update bounds just to support StandaloneGroup
+                const bounds = this.objectDisplay.getBounds(this.lastRect);
+                bounds.x = bounds.x - cameraPos.x;
+                bounds.y = bounds.y - cameraPos.y;
+                if (this.game && bounds.y + bounds.height > this.game.canvas.height)
+                {
+                    bounds.height = bounds.height - ((bounds.y + bounds.height) - this.game.canvas.height);
+                }
             }
         }
         else if (hitArea)

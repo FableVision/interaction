@@ -1,3 +1,5 @@
+import { IPoint } from './Interactive';
+
 export const INTERACTIVE_CLASS = 'interactive';
 export const GROUP_CLASS = 'focus-group';
 export const MOUSE = 'mouse';
@@ -11,6 +13,11 @@ export interface IRect
     y: number;
     width: number;
     height: number;
+}
+
+export function arePointsDifferent(a: IPoint, b: IPoint): boolean
+{
+    return a.x != b.x || a.y != b.y;
 }
 
 export function areRectsDifferent(a: IRect, b: IRect): boolean

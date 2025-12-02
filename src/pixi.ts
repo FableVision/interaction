@@ -1,8 +1,8 @@
-import { DisplayObject, Rectangle } from 'pixi.js';
+import { DisplayObject, Point, Rectangle } from 'pixi.js';
 import { Interactive, InteractiveOpts, IPoint, } from './Interactive';
 import { IRendererPlugin } from './InteractionManager';
 import { globalTimer, IDisposable } from '@fablevision/utils';
-import { areRectsDifferent, copyRectTo } from './internal';
+import { arePointsDifferent, areRectsDifferent, copyRectTo } from './internal';
 
 const helperRect = new Rectangle();
 
@@ -30,6 +30,7 @@ export class PixiInteractive extends Interactive
     private boundsID: number;
     private update: IDisposable;
     private lastRect: Rectangle;
+    private lastPos: Point;
 
     constructor(opts: InteractiveOpts & { pixi: DisplayObject })
     {
@@ -38,6 +39,7 @@ export class PixiInteractive extends Interactive
         this.pixiDisplay = opts.pixi;
         this.boundsID = -1;
         this.lastRect = new Rectangle();
+        this.lastPos = new Point();
         this.update = globalTimer.add(() =>
         {
             if (this.pixiDisplay.worldVisible)
@@ -70,12 +72,15 @@ export class PixiInteractive extends Interactive
             helperRect.x = wt.tx;
             helperRect.y = wt.ty;
 
-            if (areRectsDifferent(helperRect, this.lastRect))
+            if (arePointsDifferent(helperRect, this.lastPos))
             {
-                copyRectTo(helperRect, this.lastRect);
+                this.lastPos.copyFrom(helperRect);
 
                 div.style.left = `${helperRect.x}px`;
                 div.style.top = `${helperRect.y}px`;
+
+                // update bounds just to support StandaloneGroup
+                this.pixiDisplay.getBounds(false, this.lastRect);
             }
         }
         else if (hitArea && hitArea instanceof Rectangle)
