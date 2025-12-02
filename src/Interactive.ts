@@ -205,6 +205,7 @@ export class Interactive implements IDisposable
     public childContext: InteractiveList | ComplexFocusContext | null;
     protected _visible: boolean = true;
     protected _enabled: boolean = true;
+    protected _parentEnabled: boolean = true;
     /** ID of pointer that is currently down on the item */
     protected activePointerId: number = -1;
     /** If the active (held) pointer is in the element */
@@ -340,6 +341,24 @@ export class Interactive implements IDisposable
     public set enabled(enabled: boolean)
     {
         this._enabled = enabled;
+        if (this.childContext)
+        {
+            const children = Array.isArray(this.childContext) ? this.childContext : this.childContext.items;
+            for (const child of children)
+            {
+                child.parentEnabled = enabled;
+            }
+        }
+        this.updateHTMLEnabled();
+    }
+
+    /**
+     * @internal
+     * The enabled state of the parent group that contains this Interactive.
+     */
+    public set parentEnabled(enabled: boolean)
+    {
+        this._parentEnabled = enabled;
         this.updateHTMLEnabled();
     }
 
@@ -349,8 +368,8 @@ export class Interactive implements IDisposable
 
     private updateHTMLEnabled()
     {
-        this.htmlElement.style.display = (this._visible && this._enabled) ? 'block' : 'none';
-        if (!(this._visible && this._enabled) && this.activePointerId > -1)
+        this.htmlElement.style.display = (this._visible && this._enabled && this._parentEnabled) ? 'block' : 'none';
+        if (!(this._visible && this._enabled && this._parentEnabled) && this.activePointerId > -1)
         {
             idTracker.freeId(this.activePointerId);
         }
