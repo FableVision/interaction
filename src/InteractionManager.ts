@@ -663,7 +663,8 @@ export class InteractionManager
             const toDispose: IDisposable[] = [];
             for (let i = target; i < this.contexts.length; ++i)
             {
-                toDispose.push(this.contexts[i].cleanup);
+                // add in reverse order so that the oldest context is disposed last
+                toDispose.unshift(this.contexts[i].cleanup);
             }
             this.contexts.length = target;
             for (let i = 0; i < toDispose.length; ++i)
