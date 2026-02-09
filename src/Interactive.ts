@@ -206,6 +206,7 @@ export class Interactive implements IDisposable
     protected _visible: boolean = true;
     protected _enabled: boolean = true;
     protected _parentEnabled: boolean = true;
+    protected _inBounds: boolean = true;
     /** ID of pointer that is currently down on the item */
     protected activePointerId: number = -1;
     /** If the active (held) pointer is in the element */
@@ -362,14 +363,15 @@ export class Interactive implements IDisposable
         this.updateHTMLEnabled();
     }
 
-    public get focusable(): boolean { return this._visible && this._enabled; }
+    public get focusable(): boolean { return this._visible && this._enabled && this._parentEnabled && this._inBounds; }
 
     public get isBeingHeld() : boolean { return this.activePointerId >= 0; }
 
-    private updateHTMLEnabled()
+    protected updateHTMLEnabled()
     {
-        this.htmlElement.style.display = (this._visible && this._enabled && this._parentEnabled) ? 'block' : 'none';
-        if (!(this._visible && this._enabled && this._parentEnabled) && this.activePointerId > -1)
+        const enabled = this.focusable;
+        this.htmlElement.style.display = enabled ? 'block' : 'none';
+        if (!enabled && this.activePointerId > -1)
         {
             idTracker.freeId(this.activePointerId);
         }

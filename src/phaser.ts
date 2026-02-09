@@ -2,7 +2,7 @@ import 'phaser';
 import { Interactive, InteractiveOpts, IPoint, } from './Interactive';
 import { IRendererPlugin } from './InteractionManager';
 import { globalTimer, IDisposable } from '@fablevision/utils';
-import { areRectsDifferent, copyRectTo } from './internal';
+import { areRectsDifferent, clipRect, copyRectTo } from './internal';
 import { Game, Scene } from 'phaser';
 
 const helperRect = new Phaser.Geom.Rectangle();
@@ -58,6 +58,12 @@ export class PhaserInteractive extends Interactive
 
     public updatePosition(): void
     {
+        // backwards compatibility, since I standardized bounds clipping
+        if (this.game && this.manager && !this.manager.viewSize)
+        {
+            this.manager.viewSize = {x: 0, y: 0, width: this.game.canvas.width, height: this.game.canvas.height};
+        }
+
         const div = this.htmlElement;
         const hitArea = (this.objectDisplay as any).input?.hitArea;
         let cameraPos = { x: this.objectDisplay.scene?.cameras?.main?.scrollX ?? 0, y: this.objectDisplay.scene?.cameras?.main?.scrollY ?? 0 };
@@ -80,9 +86,11 @@ export class PhaserInteractive extends Interactive
                 const bounds = this.objectDisplay.getBounds(this.lastRect);
                 bounds.x = bounds.x - cameraPos.x;
                 bounds.y = bounds.y - cameraPos.y;
-                if (this.game && bounds.y + bounds.height > this.game.canvas.height)
+
+                if (this.manager?.viewSize)
                 {
-                    bounds.height = bounds.height - ((bounds.y + bounds.height) - this.game.canvas.height);
+                    this._inBounds = clipRect(this.manager.viewSize, bounds);
+                    this.updateHTMLEnabled();
                 }
             }
         }
@@ -95,8 +103,10 @@ export class PhaserInteractive extends Interactive
             helperRect.width = hitArea.width * Math.abs(this.transformMatrix.a);
             helperRect.height = hitArea.height * Math.abs(this.transformMatrix.d);
 
-            if (this.game && helperRect.y + helperRect.height > this.game.canvas.height) {
-                helperRect.height = helperRect.height - ((helperRect.y + helperRect.height) - this.game.canvas.height);
+            if (this.manager?.viewSize)
+            {
+                this._inBounds = clipRect(this.manager.viewSize, helperRect);
+                this.updateHTMLEnabled();
             }
 
             if (areRectsDifferent(helperRect, this.lastRect))
@@ -115,8 +125,10 @@ export class PhaserInteractive extends Interactive
             bounds.x = bounds.x - cameraPos.x;
             bounds.y = bounds.y - cameraPos.y;
 
-            if (this.game && bounds.y + bounds.height > this.game.canvas.height) {
-                bounds.height = bounds.height - ((bounds.y + bounds.height) - this.game.canvas.height);
+            if (this.manager?.viewSize)
+            {
+                this._inBounds = clipRect(this.manager.viewSize, bounds);
+                this.updateHTMLEnabled();
             }
 
             if (areRectsDifferent(helperRect, this.lastRect))

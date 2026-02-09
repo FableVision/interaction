@@ -1,8 +1,11 @@
 import { Disposable, DisposableGroup, IDisposable, math } from '@fablevision/utils';
 import { Keyboard, KeyEvent } from './Keyboard';
 import { Interactive, IPoint } from './Interactive';
-import { DWELL, GROUP_CLASS, INTERACTIVE_CLASS, KEYBOARD, MOUSE, TOUCH } from './internal';
+import { DWELL, GROUP_CLASS, INTERACTIVE_CLASS, IRect, KEYBOARD, MOUSE, TOUCH } from './internal';
 import { ComplexFocusContext } from './complex';
+
+// re-export this, since it is now in the config as an option
+export { IRect };
 
 /** A list of focusable items that can be tabbed through in order */
 export type InteractiveList = Interactive[];
@@ -188,6 +191,11 @@ export interface InteractionManagerOpts
      * want to break anything.
      */
     autoPopOnParentInteraction?: boolean;
+    /**
+     * If we want interactive areas to automatically be clipped (if basic rectangles), supply
+     * a view size here, and keep it updated if needed as InteractionManager.instance.viewSize.
+     */
+    viewSize?: IRect;
 }
 
 export class InteractionManager
@@ -202,6 +210,8 @@ export class InteractionManager
     public enabled = false;
     public useDwell: boolean = false;
     public renderer: IRendererPlugin;
+    /** size of the viewport - used for clipping bounding boxes */
+    public viewSize: IRect|null = null;
     private focusWhenDisabled: boolean;
     /** Baseline context that is added to all contexts, unless told not to */
     private baselineContext: BaselineContext;

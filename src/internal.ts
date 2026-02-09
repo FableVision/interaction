@@ -32,3 +32,27 @@ export function copyRectTo(from: IRect, to: IRect): void
     to.width = from.width;
     to.height = from.height;
 }
+
+/** Clips an item rect so it doesn't go outside the view rect. Returns true if it is still in bounds at all. */
+export function clipRect(view: IRect, item: IRect): boolean
+{
+    if (item.y < view.y)
+    {
+        item.height += (item.y - view.y);
+        item.y = view.y;
+    }
+    if (item.x < 0)
+    {
+        item.width += (item.x - view.x);
+        item.x = view.x;
+    }
+    if (item.y + item.height > view.y + view.height)
+    {
+        item.height = view.height - item.y;
+    }
+    if (item.x + item.width > view.x + view.width)
+    {
+        item.width = view.width - item.x;
+    }
+    return item.width > 0 && item.height > 0;
+}

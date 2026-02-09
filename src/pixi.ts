@@ -2,7 +2,7 @@ import { DisplayObject, Point, Rectangle } from 'pixi.js';
 import { Interactive, InteractiveOpts, IPoint, } from './Interactive';
 import { IRendererPlugin } from './InteractionManager';
 import { globalTimer, IDisposable } from '@fablevision/utils';
-import { arePointsDifferent, areRectsDifferent, copyRectTo } from './internal';
+import { arePointsDifferent, areRectsDifferent, clipRect, copyRectTo } from './internal';
 
 const helperRect = new Rectangle();
 
@@ -81,6 +81,12 @@ export class PixiInteractive extends Interactive
 
                 // update bounds just to support StandaloneGroup
                 this.pixiDisplay.getBounds(false, this.lastRect);
+
+                if (this.manager?.viewSize)
+                {
+                    this._inBounds = clipRect(this.manager.viewSize, this.lastRect);
+                    this.updateHTMLEnabled();
+                }
             }
         }
         else if (hitArea && hitArea instanceof Rectangle)
@@ -90,6 +96,12 @@ export class PixiInteractive extends Interactive
             helperRect.y = wt.ty + (hitArea.y * wt.d);
             helperRect.width = hitArea.width * wt.a;
             helperRect.height = hitArea.height * wt.d;
+
+            if (this.manager?.viewSize)
+            {
+                this._inBounds = clipRect(this.manager.viewSize, helperRect);
+                this.updateHTMLEnabled();
+            }
 
             if (areRectsDifferent(helperRect, this.lastRect))
             {
@@ -104,6 +116,13 @@ export class PixiInteractive extends Interactive
         else
         {
             const bounds = this.pixiDisplay.getBounds(false, helperRect);
+
+            if (this.manager?.viewSize)
+            {
+                this._inBounds = clipRect(this.manager.viewSize, bounds);
+                this.updateHTMLEnabled();
+            }
+
             if (areRectsDifferent(bounds, this.lastRect))
             {
                 copyRectTo(bounds, this.lastRect);
