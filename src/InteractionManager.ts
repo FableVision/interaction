@@ -241,6 +241,7 @@ export class InteractionManager
         this.focusWhenDisabled = !!opts.focusWhenDisabled;
         this.autoPop = !!opts.autoPopOnParentInteraction;
         this.itemsWeAttached = new WeakSet();
+        this.viewSize = opts.viewSize || null;
 
         this.renderer = opts.renderer;
         if (typeof opts.accessibilityDiv == 'string')
