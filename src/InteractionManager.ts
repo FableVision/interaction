@@ -196,6 +196,13 @@ export interface InteractionManagerOpts
      * a view size here, and keep it updated if needed as InteractionManager.instance.viewSize.
      */
     viewSize?: IRect;
+    /**
+     * If we *don't* want to set the global instance of InteractionManager. Setting this is
+     * generally a **bad** idea, but sometimes for advanced usage we need a separate InteractionManager
+     * for a separate renderer. Note that complex contexts and drag/drop behavior will only work
+     * with the global instance.
+     */
+    skipInstance?: boolean;
 }
 
 export class InteractionManager
@@ -233,7 +240,8 @@ export class InteractionManager
 
     constructor(opts: InteractionManagerOpts)
     {
-        InteractionManager._instance = this;
+        if (!opts.skipInstance)
+            InteractionManager._instance = this;
 
         this.groupEnd = opts.groupEnd || GroupEndStrategy.Exit;
         this.controls = opts.control || ControlStrategy.BrowserNative;
@@ -273,6 +281,28 @@ export class InteractionManager
         this.currentDisposable = new DisposableGroup();
 
         this.reset();
+    }
+
+    /**
+     * Allows you to replace your HTML parent/renderer without destroying and recreating the full
+     * InteractionManager.
+     * @param opts A partial subset of the constructor options
+     */
+    public reinit(opts: Pick<InteractionManagerOpts, 'accessibilityDiv'|'renderer'|'viewSize'>)
+    {
+        this.reset();
+
+        this.renderer = opts.renderer;
+        if (typeof opts.accessibilityDiv == 'string')
+        {
+            this.htmlContainer = document.querySelector('#' + opts.accessibilityDiv)!;
+        }
+        else
+        {
+            this.htmlContainer = opts.accessibilityDiv;
+        }
+        if (opts.viewSize)
+            this.viewSize = opts.viewSize;
     }
 
     private attachControls()
