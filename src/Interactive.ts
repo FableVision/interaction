@@ -78,22 +78,67 @@ export enum DragType {
 
 export interface InteractiveOpts
 {
+    /**
+     * If dwell activation should always be on for this interactive.
+     */
     alwaysDwell?: boolean;
+    /**
+     * A child context that belongs to this interactive, and is activated automatically when this interactive is
+     * activated.
+     */
     childContext?: InteractiveList|ComplexFocusContext;
+    /**
+     * What cursor should be used for this interactive. Defaults to "pointer"
+     */
     cursor?: string;
+    /**
+     * Role for the role attribute.
+     */
     role?: string;
+    /**
+     * Label for the aria-label attribute.
+     */
     label?: string;
+    /**
+     * CSS to add to this interactive.
+     */
     css?: Partial<CSSStyleDeclaration>;
+    /**
+     * If/how this interactive is draggable.
+     */
     draggable?: boolean|DragStrategy;
+    /**
+     * Minimum cursor movement before a drag activates (otherwise is a click/tap). Defaults to 20.
+     */
     minDragDist?: number;
+    /**
+     * If this interactive should only be accessible via mouse/touch.
+     */
     pointerOnly?: boolean;
+    /**
+     * If this interactive should only be accessible via keyboard.
+     */
     keyboardOnly?: boolean;
+    /**
+     * How the keyboard is used for this interactive. Defaults to KeyboardActivateStrategy.Normal.
+     */
     keyControl?: KeyboardActivateStrategy;
     /**
      * If a custom HTML element is passed in here, the interactive won't modify the
      * width/height of the element, but will adjust its position.
      */
     htmlOverride?: HTMLElement;
+    /**
+     * If a HTML tag name is passed in here, the interactive will use that instead of the default div.
+     * It will position and resize the element - you would be responsible for making it not visible.
+     */
+    htmlTag?: keyof HTMLElementTagNameMap;
+    /**
+     * A class to append to the class list for the html element for this interactive. Do not use
+     * "interactive", "touch", "mouse", "keyboard", or "dwell" as these are already used by the
+     * library.
+     */
+    htmlClass?: string;
 }
 
 export interface IPoint
@@ -260,13 +305,15 @@ export class Interactive implements IDisposable
         if (opts.htmlOverride)
             this.htmlElement = opts.htmlOverride;
         else
-            this.htmlElement = document.createElement('div');
+            this.htmlElement = document.createElement(opts.htmlTag || 'div');
         this.htmlIsOverridden = !!opts.htmlOverride;
         this.htmlElement.classList.add('interactive');
+        if (opts.htmlClass)
+            this.htmlElement.classList.add(opts.htmlClass);
         this.childContext = opts.childContext ? opts.childContext : null;
         if (opts.role)
         {
-            this.htmlElement.ariaRoleDescription = opts.role;
+            this.htmlElement.role = opts.role;
         }
         if (opts.label)
         {
