@@ -1,6 +1,6 @@
 import { Disposable, DisposableGroup, IDisposable, math } from '@fablevision/utils';
 import { Keyboard, KeyEvent } from './Keyboard';
-import { Interactive, IPoint } from './Interactive';
+import { Interactive, IPoint, KEYBOARD_ONLY_NO_INTERACT } from './Interactive';
 import { DWELL, GROUP_CLASS, INTERACTIVE_CLASS, IRect, KEYBOARD, MOUSE, TOUCH } from './internal';
 import { ComplexFocusContext } from './complex';
 
@@ -806,13 +806,15 @@ export class InteractionManager
         this.currentContext = {items: list, extendedFamily: null};
         const added = list.slice();
         const fullFamily: InteractiveList = [];
+        let tabIndex = 1;
         for (let i = 0; i < list.length; ++i)
         {
             const item = list[i];
             item.manager = this;
             item.updatePosition();
             this.htmlContainer.appendChild(item.htmlElement);
-            item.htmlElement.tabIndex = item.pointerOnly ? -1 : i + 1;
+            if (item.keyboardOnly != KEYBOARD_ONLY_NO_INTERACT)
+                item.htmlElement.tabIndex = item.pointerOnly ? -1 : tabIndex++;
             this.currentDisposable.add(item.onFocus.add(() => this.onFocused(item)));
             this.currentDisposable.add(item.onBlur.add(() => this.onBlurred(item)));
 

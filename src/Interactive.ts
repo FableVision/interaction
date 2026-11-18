@@ -116,9 +116,10 @@ export interface InteractiveOpts
      */
     pointerOnly?: boolean;
     /**
-     * If this interactive should only be accessible via keyboard.
+     * If this interactive should only be accessible via keyboard, and if it should be
+     * outside the tab order entirely as well.
      */
-    keyboardOnly?: boolean;
+    keyboardOnly?: boolean|typeof KEYBOARD_ONLY_NO_INTERACT;
     /**
      * How the keyboard is used for this interactive. Defaults to KeyboardActivateStrategy.Normal.
      */
@@ -140,6 +141,13 @@ export interface InteractiveOpts
      */
     htmlClass?: string;
 }
+
+/**
+ * When supplied as an Interactive's keyboardOnly config, this tells the manager that the
+ * Interactive is a keyboard only thing, but also shouldn't be in the tab order because it
+ * isn't actually interactive - it is just text or something.
+ */
+export const KEYBOARD_ONLY_NO_INTERACT = 'no-interact';
 
 export interface IPoint
 {
@@ -241,7 +249,7 @@ export class Interactive implements IDisposable
     /** Should not be accessible via keyboard ever. */
     public pointerOnly: boolean;
     /** Should not be accessible via mouse/touch ever. */
-    public keyboardOnly: boolean;
+    public keyboardOnly: boolean|typeof KEYBOARD_ONLY_NO_INTERACT;
     /** The invisible HTML element for this item to handle all clicks & highlighting */
     public htmlElement: HTMLElement;
     /** If a custom HTML element was passed in the interactive options. */
@@ -291,7 +299,7 @@ export class Interactive implements IDisposable
         this.dragStartPoint = {x: 0, y: 0};
         this.currentDragType = DragType.None;
         this.pointerOnly = !!opts.pointerOnly;
-        this.keyboardOnly = !!opts.keyboardOnly;
+        this.keyboardOnly = opts.keyboardOnly || false;
         this.keyStrat = opts.keyControl || KeyboardActivateStrategy.Normal;
         if (this.keyStrat == KeyboardActivateStrategy.Normal)
         {
